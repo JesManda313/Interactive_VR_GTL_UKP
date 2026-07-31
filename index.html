@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#020617" />
+
+    <title>GTL VR Learning</title>
+
+    <link rel="stylesheet" href="/src/style.css" />
+
+    <!-- A-Frame dipanggil dari CDN agar tidak dibundel oleh Vite -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  </head>
+
+  <body>
+    <div id="appShell">
+      <!-- HOME / MODULE LIST -->
+      <section id="homeScreen" class="screen home-screen">
+        <div class="home-card">
+          <div class="home-header">
+            <div>
+              <p class="eyebrow">FKG UK Petra · Interactive Lab</p>
+              <h1>GTL VR Learning</h1>
+            </div>
+            <span class="status-badge"><span class="status-dot"></span>Siap belajar</span>
+          </div>
+
+          <p class="description">
+            Media pembelajaran prosedur klinis berbasis video 360°, mode VR, mode mobile,
+            dan branching quiz.
+          </p>
+
+          <div class="home-actions">
+            <button id="openSettingsButton" class="small-button">⚙ Pengaturan VR</button>
+            <span class="home-hint">Pilih modul untuk memulai sesi</span>
+          </div>
+
+          <div class="section-header">
+            <h2>Daftar Modul</h2>
+            <p>Pilih modul pembelajaran yang ingin dijalankan.</p>
+          </div>
+
+          <div id="moduleList" class="module-list module-list-grid">
+            <p>Memuat modul...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS / KALIBRASI VR -->
+      <section id="settingsScreen" class="screen home-screen hidden">
+        <div class="home-card">
+          <button id="backToHomeFromSettings" class="back-button">← Kembali</button>
+
+          <p class="eyebrow">Pengaturan</p>
+          <h1>Kalibrasi VR</h1>
+          <p class="description">
+            Sesuaikan jarak dan posisi gambar kiri-kanan agar nyaman di mata sebelum memulai pembelajaran.
+            Pasang kacamata VR sambil menggeser slider di bawah ini.
+          </p>
+
+          <div class="calibration-preview-wrapper">
+            <div id="previewLeftMount" class="preview-mount">
+              <div class="preview-crosshair"></div>
+            </div>
+            <div id="previewRightMount" class="preview-mount">
+              <div class="preview-crosshair"></div>
+            </div>
+          </div>
+
+          <label class="calibration-row">
+            <span>Jarak Mata (Kiri ↔ Kanan)</span>
+            <input type="range" id="ipdSliderStandalone" min="-40" max="40" step="1" value="0" />
+          </label>
+
+          <label class="calibration-row">
+            <span>Geser Vertikal</span>
+            <input type="range" id="vShiftSliderStandalone" min="-30" max="30" step="1" value="0" />
+          </label>
+
+          <button id="resetCalibrationButton" class="back-button">Reset ke Default</button>
+        </div>
+      </section>
+      
+      <!-- MODE SELECTION -->
+      <section id="modeScreen" class="screen home-screen hidden">
+        <div class="home-card">
+          <div class="screen-nav-panel">
+            <button id="backToModules" class="back-button">← Kembali ke Modul</button>
+            <span class="screen-nav-label">Pilih pengalaman belajar</span>
+          </div>
+
+          <div class="mode-heading">
+            <div>
+              <p class="eyebrow">Modul terpilih</p>
+              <h1 id="selectedModuleTitle">-</h1>
+            </div>
+            <div class="module-meta">
+              <span id="selectedModuleSegments">- segmen</span>
+              <span id="selectedModuleDecisions">- decision point</span>
+            </div>
+          </div>
+          <p id="selectedModuleDescription" class="description">-</p>
+
+          <div class="mode-grid">
+            <button id="openVrMode" class="mode-card">
+              <span class="mode-icon">🥽</span>
+              <strong>Mode VR</strong>
+              <small>
+                Tampilan kiri-kanan untuk headset Shinecon VR. Pilih jawaban dengan gaze cursor.
+              </small>
+            </button>
+
+            <button id="openMobileMode" class="mode-card">
+              <span class="mode-icon">📱</span>
+              <strong>Mode Mobile</strong>
+              <small>
+                Satu layar penuh. Geser view dengan drag dan pilih jawaban dengan tap.
+              </small>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MOBILE PLAYER -->
+      <section id="mobileScreen" class="screen player-screen hidden">
+        <div class="topbar">
+          <button class="back-button" data-action="back-mode">← Mode</button>
+
+          <div class="topbar-title">
+            <strong>Mode Mobile</strong>
+            <span id="mobileScenarioTitle">-</span>
+          </div>
+
+          <button id="mobileQuizButton" class="small-button">Tampilkan Kuis</button>
+        </div>
+
+        <div id="mobileSceneMount" class="scene-mount full-scene"></div>
+        <div id="mobileFadeOverlay" class="fade-overlay">
+          <div id="mobileFadeText" class="fade-message"></div>
+        </div>
+      </section>
+
+      <!-- VR PLAYER -->
+      <section id="vrScreen" class="screen player-screen hidden">
+        <div class="topbar vr-topbar">
+          <button class="back-button" data-action="back-mode">← Mode</button>
+
+          <div class="topbar-title">
+            <strong>Mode VR</strong>
+            <span id="vrScenarioTitle">-</span>
+          </div>
+
+          <button id="vrQuizButton" class="small-button">Tampilkan Kuis</button>
+        </div>
+
+        <!-- Mode VR tetap split kiri-kanan -->
+        <div class="vr-split-wrapper">
+          <div class="vr-eye-panel">
+            <div id="vrLeftMount" class="scene-mount half-scene"></div>
+            <div class="vr-fade-panel">
+              <span class="vr-eye-label">MATA KIRI</span>
+              <div id="vrFadeTextLeft" class="fade-message"></div>
+            </div>
+          </div>
+          <div class="vr-eye-panel">
+            <div id="vrRightMount" class="scene-mount half-scene"></div>
+            <div class="vr-fade-panel">
+              <span class="vr-eye-label">MATA KANAN</span>
+              <div id="vrFadeTextRight" class="fade-message"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

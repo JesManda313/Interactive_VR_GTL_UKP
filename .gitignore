@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.zip
+*.log
+.DS_Store
+*.mp4
+public/videos/
+public/videos/simpen/

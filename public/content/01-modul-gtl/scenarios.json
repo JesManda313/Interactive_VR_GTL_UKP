@@ -1,0 +1,208 @@
+[
+  {
+    "id": "segmen_01_pembukaan_anamnesis",
+    "type": "linear",
+    "title": "Segmen 1 - Pembukaan & Anamnesis",
+    "video": "/videos/01-pembukaan-anamnesis.mp4",
+    "next": "segmen_02_cetakan_awal"
+  },
+  {
+    "id": "segmen_02_cetakan_awal",
+    "type": "decision",
+    "title": "Segmen 2 - Cetakan Awal",
+    "video": "/videos/01-pembukaan-anamnesis.mp4",
+    "question": "Saat mengaduk alginate, operator menyadari adonan terlalu encer karena rasio air terlalu banyak dibanding bubuk. Tindakan yang paling tepat adalah:",
+    "options": [
+      {
+        "label": "A",
+        "text": "Tetap menggunakan adonan ini karena konsistensi encer masih bisa menghasilkan cetakan yang cukup baik selama tekanan insersi terjaga.",
+        "correct": false,
+        "consequence": "konsekuensi_01_alginate_tetap_digunakan"
+      },
+      {
+        "label": "B",
+        "text": "Menambahkan lebih banyak bubuk alginate ke adonan yang sudah terlalu encer dan mengaduknya kembali.",
+        "correct": false,
+        "consequence": "konsekuensi_02_alginate_ditambah_bubuk"
+      },
+      {
+        "label": "C",
+        "text": "Membuang adonan ini dan mengulang pengadukan dari awal dengan takaran bubuk dan air yang benar.",
+        "correct": true,
+        "next": "segmen_03_sendok_cetak_individual"
+      }
+    ]
+  },
+  {
+    "id": "konsekuensi_01_alginate_tetap_digunakan",
+    "type": "consequence",
+    "title": "Konsekuensi - Alginate Terlalu Encer Tetap Digunakan",
+    "video": "/videos/01-pembukaan-anamnesis.mp4",
+    "returnTo": "segmen_02_cetakan_awal"
+  },
+  {
+    "id": "konsekuensi_02_alginate_ditambah_bubuk",
+    "type": "consequence",
+    "title": "Konsekuensi - Alginate Ditambah Bubuk",
+    "video": "/videos/k02-alginate-ditambah-bubuk.mp4",
+    "returnTo": "segmen_02_cetakan_awal"
+  },
+  {
+    "id": "segmen_03_sendok_cetak_individual",
+    "type": "linear",
+    "title": "Segmen 3 - Pembuatan Sendok Cetak Individual",
+    "video": "/videos/03-sendok-cetak-individual.mp4",
+    "next": "segmen_04_border_molding"
+  },
+  {
+    "id": "segmen_04_border_molding",
+    "type": "decision",
+    "title": "Segmen 4 - Border Molding",
+    "video": "/videos/04-border-molding.mp4",
+    "question": "Pada saat melakukan border molding di area bukal kanan rahang atas, gerakan otot yang tepat untuk membentuk tepi compound di daerah ini adalah:",
+    "options": [
+      {
+        "label": "A",
+        "text": "Menarik sudut mulut pasien ke lateral dengan jari telunjuk operator.",
+        "correct": false,
+        "consequence": "konsekuensi_03_border_molding_lateral"
+      },
+      {
+        "label": "B",
+        "text": "Meminta pasien menggerakkan pipi seperti berkumur, lalu menekan ujung pipi ke arah dalam.",
+        "correct": true,
+        "next": "segmen_05_final_impression"
+      },
+      {
+        "label": "C",
+        "text": "Meminta pasien membuka mulut selebar mungkin dan mengarahkan pipi ke depan.",
+        "correct": false,
+        "consequence": "konsekuensi_04_border_molding_mulut_terlalu_lebar"
+      }
+    ]
+  },
+  {
+    "id": "konsekuensi_03_border_molding_lateral",
+    "type": "consequence",
+    "title": "Konsekuensi - Gerakan Lateral Tidak Cukup",
+    "video": "/videos/k03-border-molding-lateral.mp4",
+    "returnTo": "segmen_04_border_molding"
+  },
+  {
+    "id": "konsekuensi_04_border_molding_mulut_terlalu_lebar",
+    "type": "consequence",
+    "title": "Konsekuensi - Mulut Dibuka Terlalu Lebar",
+    "video": "/videos/k04-border-molding-mulut-terlalu-lebar.mp4",
+    "returnTo": "segmen_04_border_molding"
+  },
+  {
+    "id": "segmen_05_final_impression",
+    "type": "linear",
+    "title": "Segmen 5 - Final Impression",
+    "video": "/videos/05-final-impression.mp4",
+    "next": "segmen_06_bite_rim"
+  },
+  {
+    "id": "segmen_06_bite_rim",
+    "type": "linear",
+    "title": "Segmen 6 - Pembuatan Bite Rim & Wax Occlusal Rim",
+    "video": "/videos/06-bite-rim.mp4",
+    "next": "segmen_07_dvo"
+  },
+  {
+    "id": "segmen_07_dvo",
+    "type": "decision",
+    "title": "Segmen 7 - Penetapan Gigit: DVO",
+    "video": "/videos/07-dvo.mp4",
+    "question": "DVR terukur 60 mm. Operator akan menetapkan DVO dengan mengurangi freeway space dari DVR. Berapakah nilai DVO yang tepat, dan berapakah freeway space yang digunakan pada kasus GTL pasien edentulous umumnya?",
+    "options": [
+      {
+        "label": "A",
+        "text": "DVO = 58 mm. Freeway space 2 mm digunakan karena ini nilai yang selalu baku untuk semua pasien GTL.",
+        "correct": false,
+        "consequence": "konsekuensi_05_dvo_terlalu_tinggi"
+      },
+      {
+        "label": "B",
+        "text": "DVO = 57 mm. Freeway space 3 mm digunakan sebagai titik awal, kemudian diverifikasi dengan metode fonetik dan estetik sebelum difinalisasi.",
+        "correct": true,
+        "next": "segmen_08_artikulator"
+      },
+      {
+        "label": "C",
+        "text": "DVO = 54 mm. Freeway space 6 mm digunakan agar pasien merasa lebih nyaman dan tidak terasa sesak.",
+        "correct": false,
+        "consequence": "konsekuensi_06_dvo_terlalu_rendah"
+      }
+    ]
+  },
+  {
+    "id": "konsekuensi_05_dvo_terlalu_tinggi",
+    "type": "consequence",
+    "title": "Konsekuensi - DVO Terlalu Tinggi",
+    "video": "/videos/k05-dvo-terlalu-tinggi.mp4",
+    "returnTo": "segmen_07_dvo"
+  },
+  {
+    "id": "konsekuensi_06_dvo_terlalu_rendah",
+    "type": "consequence",
+    "title": "Konsekuensi - DVO Terlalu Rendah",
+    "video": "/videos/k06-dvo-terlalu-rendah.mp4",
+    "returnTo": "segmen_07_dvo"
+  },
+  {
+    "id": "segmen_08_artikulator",
+    "type": "linear",
+    "title": "Segmen 8 - Penanaman Model ke Artikulator",
+    "video": "/videos/08-artikulator.mp4",
+    "next": "segmen_09_seleksi_penyusunan_gigi"
+  },
+  {
+    "id": "segmen_09_seleksi_penyusunan_gigi",
+    "type": "linear",
+    "title": "Segmen 9 - Seleksi & Penyusunan Gigi Tiruan",
+    "video": "/videos/09-seleksi-penyusunan-gigi.mp4",
+    "next": "segmen_10_try_in"
+  },
+  {
+    "id": "segmen_10_try_in",
+    "type": "linear",
+    "title": "Segmen 10 - Try-In & Rangkuman Pembelajaran",
+    "video": "/videos/10-try-in.mp4",
+    "next": "segmen_11_selective_grinding"
+  },
+  {
+    "id": "segmen_11_selective_grinding",
+    "type": "linear",
+    "title": "Segmen 11 - Selective Grinding pada Try-In",
+    "video": "/videos/11-selective-grinding.mp4",
+    "next": "segmen_12_processing"
+  },
+  {
+    "id": "segmen_12_processing",
+    "type": "linear",
+    "title": "Segmen 12 - Processing, Finishing & Polishing",
+    "video": "/videos/12-processing-finishing-polishing.mp4",
+    "next": "segmen_13_remounting"
+  },
+  {
+    "id": "segmen_13_remounting",
+    "type": "linear",
+    "title": "Segmen 13 - Remounting & Oklusal Adjustment",
+    "video": "/videos/13-remounting-oklusal-adjustment.mp4",
+    "next": "segmen_14_insersi"
+  },
+  {
+    "id": "segmen_14_insersi",
+    "type": "linear",
+    "title": "Segmen 14 - Insersi & Instruksi Pasien",
+    "video": "/videos/14-insersi-instruksi-pasien.mp4",
+    "next": "selesai"
+  },
+  {
+    "id": "selesai",
+    "type": "end",
+    "title": "Selesai",
+    "video": "/videos/15-penutup.mp4"
+  }
+]

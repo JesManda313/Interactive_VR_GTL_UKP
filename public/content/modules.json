@@ -1,0 +1,11 @@
+[
+  {
+    "id": "01-modul-gtl",
+    "title": "Prosedur Klinis Gigi Tiruan Lengkap",
+    "subtitle": "Video 360° POV Operator dengan Branching Quiz",
+    "description": "Modul ini membahas alur prosedur GTL dari anamnesis, pencetakan awal, border molding, penetapan DVO, hingga insersi.",
+    "totalSegments": 14,
+    "totalDecisionPoints": 3,
+    "scenarioUrl": "/content/01-modul-gtl/scenarios.json"
+  }
+]
