@@ -23,23 +23,34 @@ const VSHIFT_STORAGE_KEY = 'gtlvr_vshift_offset_px';
 let calibrationIpdOffset = Number(localStorage.getItem(IPD_STORAGE_KEY)) || 0;
 let calibrationVShift = Number(localStorage.getItem(VSHIFT_STORAGE_KEY)) || 0;
 
-const mobileScenarioTitle = document.getElementById('mobileScenarioTitle');
 const vrScenarioTitle = document.getElementById('vrScenarioTitle');
 
+//daftar modul yang sedang dipilih
 let modules = [];
 let activeModule = null;
 
+//daftar skenario yang aktif dan  Map untuk lookup cepat 
+// by-id (O(1) dibanding .find() yang O(n))
 let scenarios = [];
 let scenarioMap = new Map();
 let activeScenarioId = null;
+
+// mode yang aktif vr / mobile 
 let activeMode = null;
 
+//untuk panel quiznya visible apa ndak, 
+// munculin langsung setelah video konsekuensi 
 let isQuizVisible = false;
 let shouldShowQuizImmediately = false;
 
+//untuk deteksi remote bluetooth  
 let gamepadIndex = null;
 let prevButtonPressed = false;
 
+/**
+ * Sanitasi nilai untuk dimasukkan ke HTML/atribut teks.
+ * Mengubah null/undefined menjadi string kosong dan meng-escape entitas HTML.
+ */
 function safeText(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -48,6 +59,10 @@ function safeText(value) {
     .replace(/>/g, '&gt;');
 }
 
+/**
+ * Ganti layar yang terlihat ke elemen screen yang diberikan.
+ * Menyembunyikan semua screen yang diketahui lalu menampilkan yang dipilih.
+ */
 function showScreen(screen) {
   homeScreen.classList.add('hidden');
   settingsScreen.classList.add('hidden');
@@ -58,6 +73,10 @@ function showScreen(screen) {
   screen.classList.remove('hidden');
 }
 
+/**
+ * kalibrasi IPD dan pergeseran vertikal ke mount kiri/kanan.
+ * Offset diterapkan lewat transform CSS sehingga preview dan mount VR sejajar.
+ */
 function applyCalibrationToMounts(leftEl, rightEl) {
   if (leftEl) {
     leftEl.style.transform = `translate(${calibrationIpdOffset}px, ${calibrationVShift}px)`;
@@ -67,24 +86,35 @@ function applyCalibrationToMounts(leftEl, rightEl) {
   }
 }
 
-function applyVrCalibration() {
-  applyCalibrationToMounts(vrLeftMount, vrRightMount);
+/**
+ * Terapkan kalibrasi ke target tertentu: 'vr' atau 'preview'.
+ * Untuk VR, gunakan mount kiri/kanan. Untuk preview, ambil elemen preview.
+ */
+function applyCalibrationTarget(target) {
+  if (target === 'vr') {
+    applyCalibrationToMounts(vrLeftMount, vrRightMount);
+    return;
+  }
+
+  if (target === 'preview') {
+    const previewLeft = document.getElementById('previewLeftMount');
+    const previewRight = document.getElementById('previewRightMount');
+    applyCalibrationToMounts(previewLeft, previewRight);
+  }
 }
 
-function applyPreviewCalibration() {
-  const previewLeft = document.getElementById('previewLeftMount');
-  const previewRight = document.getElementById('previewRightMount');
-  applyCalibrationToMounts(previewLeft, previewRight);
-}
-
+/**
+ * Simpan nilai kalibrasi baru (IPD dan vertical shift) dan terapkan.
+ * Juga memperbarui kontrol slider yang terlihat agar sesuai nilai baru.
+ */
 function setCalibrationValues(ipd, vShift) {
   calibrationIpdOffset = ipd;
   calibrationVShift = vShift;
   localStorage.setItem(IPD_STORAGE_KEY, calibrationIpdOffset);
   localStorage.setItem(VSHIFT_STORAGE_KEY, calibrationVShift);
 
-  applyVrCalibration();
-  applyPreviewCalibration();
+  applyCalibrationTarget('vr');
+  applyCalibrationTarget('preview');
 
   const ipdSlider = document.getElementById('ipdSlider');
   const vShiftSlider = document.getElementById('vShiftSlider');
@@ -97,6 +127,7 @@ function setCalibrationValues(ipd, vShift) {
   if (vShiftSliderStandalone) vShiftSliderStandalone.value = calibrationVShift;
 }
 
+/** Ambil manifest modul dari server dan render daftar modul. */
 async function loadModules() {
   const response = await fetch(MODULES_URL);
 
@@ -108,6 +139,10 @@ async function loadModules() {
   renderModuleList();
 }
 
+/**
+ * Render daftar modul ke dalam UI. Setiap modul menjadi sebuah tombol.
+ * Menggunakan `safeText` untuk mencegah penyisipan HTML yang tidak aman.
+ */
 function renderModuleList() {
   if (!modules.length) {
     moduleList.innerHTML = '<p>Belum ada modul tersedia.</p>';
@@ -115,10 +150,10 @@ function renderModuleList() {
   }
 
   moduleList.innerHTML = modules
-    .map((module) => {
+    .map((module, index) => {
       return `
-        <button class="module-card" data-module-id="${safeText(module.id)}">
-          <div class="module-card-content">
+        <button class="module-card" data-module-id="${safeText(module.id)}" data-index="${String(index + 1).padStart(2, '0')}">
+          <div class="module-body">
             <strong>${safeText(module.title)}</strong>
             <p>${safeText(module.subtitle ?? module.description ?? '')}</p>
             <small>
@@ -126,6 +161,7 @@ function renderModuleList() {
               ${safeText(module.totalDecisionPoints ?? '-')} decision point
             </small>
           </div>
+          <span class="module-arrow">→</span>
         </button>
       `;
     })
@@ -138,6 +174,9 @@ function renderModuleList() {
   });
 }
 
+/**
+ * Buka modul berdasarkan id: set active module, perbarui UI, muat skenarionya, lalu tampilkan pilihan mode.
+ */
 async function openModule(moduleId) {
   const selectedModule = modules.find((module) => module.id === moduleId);
 
@@ -158,6 +197,7 @@ async function openModule(moduleId) {
   showScreen(modeScreen);
 }
 
+/** Ambil skenario untuk modul dan buat peta (Map) yang diindeks oleh id skenario. */
 async function loadScenarios(scenarioUrl) {
   const response = await fetch(scenarioUrl);
 
@@ -170,10 +210,15 @@ async function loadScenarios(scenarioUrl) {
   activeScenarioId = scenarios[0]?.id ?? null;
 }
 
+/** Kembalikan objek skenario aktif berdasarkan `activeScenarioId`. */
 function getActiveScenario() {
   return scenarioMap.get(activeScenarioId);
 }
 
+/**
+ * Pastikan ada elemen video bersama untuk VR (digunakan oleh kedua mata).
+ * Buat elemen jika belum ada, set sumber video sesuai skenario, dan pasang handler.
+ */
 function ensureSharedVrVideo(scenario) {
   let video = document.getElementById('sharedVrVideo');
 
@@ -204,6 +249,10 @@ function ensureSharedVrVideo(scenario) {
   return video;
 }
 
+/**
+ * Hentikan dan bersihkan semua elemen video skenario di DOM.
+ * Pause setiap video, hapus atribut src, lalu panggil load() untuk membebaskan resource.
+ */
 function stopVideos() {
   document.querySelectorAll('.scenario-video').forEach((video) => {
     try {
@@ -216,6 +265,7 @@ function stopVideos() {
   });
 }
 
+/** Pause semua video skenario yang sedang diputar. Digunakan sebelum menampilkan kuis. */
 function pauseActiveVideos() {
   document.querySelectorAll('.scenario-video').forEach((video) => {
     try {
@@ -226,6 +276,10 @@ function pauseActiveVideos() {
   });
 }
 
+/**
+ * Clear semua scene yang terpasang: hentikan video dan kosongkan kontainer mount.
+ * Juga reset flag visibilitas kuis.
+ */
 function clearScenes() {
   stopVideos();
 
@@ -236,6 +290,10 @@ function clearScenes() {
   isQuizVisible = false;
 }
 
+/**
+ * Ambil elemen overlay fade sesuai mode ('mobile' atau 'vr').
+ * Untuk VR dapat mengembalikan beberapa elemen (kiri/kanan).
+ */
 function getFadeOverlay(mode) {
   if (mode === 'mobile') {
     return document.getElementById('mobileFadeOverlay');
@@ -248,6 +306,7 @@ function getFadeOverlay(mode) {
   return null;
 }
 
+/** Set pesan teks pada overlay fade untuk mode tertentu dan aktifkan overlay. */
 function setFadeMessage(mode, message) {
   const overlays = getFadeOverlays(mode);
 
@@ -258,6 +317,7 @@ function setFadeMessage(mode, message) {
   });
 }
 
+/** Nonaktifkan overlay fade untuk mode tertentu dan bersihkan pesan teks. */
 function clearFadeMessage(mode) {
   getFadeOverlays(mode).forEach((overlay) => {
     overlay.classList.remove('active');
@@ -266,12 +326,17 @@ function clearFadeMessage(mode) {
   });
 }
 
+/** Normalisasi nilai overlay menjadi array (selalu mengembalikan array). */
 function getFadeOverlays(mode) {
   const overlay = getFadeOverlay(mode);
   if (!overlay) return [];
   return Array.isArray(overlay) ? overlay : [overlay];
 }
 
+/**
+ * Lakukan transisi fade pada overlay (opacity = 0 atau 1).
+ * Mengembalikan Promise yang ter-resolve saat transisi selesai atau timeout.
+ */
 function fadeOverlay(mode, opacity) {
   return new Promise((resolve) => {
     const overlays = getFadeOverlays(mode);
@@ -311,6 +376,10 @@ function fadeOverlay(mode, opacity) {
   });
 }
 
+/**
+ * Bangun HTML A-Frame untuk daftar opsi kuis.
+ * Menghitung posisi, ukuran, dan atribut data untuk tiap opsi.
+ */
 function buildOptionsHtml(options = [], variant = 'mobile') {
   const count = options.length || 1;
 
@@ -319,14 +388,16 @@ function buildOptionsHtml(options = [], variant = 'mobile') {
   const gapX = variant === 'vr' ? 0.08 : 0.15;
 
   const optionWidth = (availableWidth - gapX * (count - 1)) / count;
-  const optionHeight = variant === 'vr' ? 0.85 : 1.3;
+  const optionHeight = variant === 'vr' ? 0.62 : 1.05;
 
   const totalRowWidth = optionWidth * count + gapX * (count - 1);
   const startX = -totalRowWidth / 2 + optionWidth / 2;
 
-  const y = variant === 'vr' ? -0.35 : -0.4;
-  const textScale = variant === 'vr' ? '0.55 0.55 0.55' : '0.65 0.65 0.65';
-  const wrapCount = variant === 'vr' ? 14 : 16;
+  const y = variant === 'vr' ? -0.5 : -0.5;
+  const textScale = variant === 'vr'
+    ? '0.9 0.9 0.9'
+    : '0.9 0.9 0.9';
+  const wrapCount = variant === 'vr' ? 18 : 20;
 
   return options
     .map((option, index) => {
@@ -345,7 +416,7 @@ function buildOptionsHtml(options = [], variant = 'mobile') {
             class="option-bg clickable"
             width="${optionWidth.toFixed(3)}"
             height="${optionHeight}"
-            color="#2563eb"
+            color="#6f9fbd"
             opacity="0.96"
             material="shader: flat"
           ></a-plane>
@@ -366,15 +437,19 @@ function buildOptionsHtml(options = [], variant = 'mobile') {
     .join('');
 }
 
+/**
+ * Bangun HTML A-Frame untuk panel kuis lengkap (pertanyaan + opsi + feedback).
+ * Mengembalikan string HTML atau string kosong jika tidak ada pertanyaan.
+ */
 function buildQuizPanelHtml(scenario, variant = 'mobile') {
   if (!scenario.question || !Array.isArray(scenario.options)) {
     return '';
   }
 
   const panelWidth = variant === 'vr' ? '2.25' : '4.7';
-  const panelHeight = variant === 'vr' ? '1.7' : '2.4';
+  const panelHeight = variant === 'vr' ? '2.35' : '3.05';
   const questionWidth = variant === 'vr' ? '1.95' : '3.4';
-  const questionY = variant === 'vr' ? '0.55' : '0.65';
+  const questionY = variant === 'vr' ? '0.62' : '0.8';
   const options = buildOptionsHtml(scenario.options, variant);
 
   return `
@@ -386,16 +461,33 @@ function buildQuizPanelHtml(scenario, variant = 'mobile') {
       <a-plane
         width="${panelWidth}"
         height="${panelHeight}"
-        color="#111827"
-        opacity="0.94"
+        color="#f7fbfe"
+        opacity="0.97"
         material="shader: flat"
       ></a-plane>
+
+      <a-plane
+        width="${panelWidth}"
+        height="0.08"
+        color="#78b7dc"
+        position="0 ${variant === 'vr' ? '1.09' : '1.47'} 0.04"
+        material="shader: flat"
+      ></a-plane>
+
+      <a-text
+        value="DECISION POINT"
+        align="center"
+        width="${variant === 'vr' ? '1.5' : '2.2'}"
+        color="#4d89ae"
+        position="0 ${variant === 'vr' ? '1.2' : '1.62'} 0.04"
+        wrap-count="20"
+      ></a-text>
 
       <a-text
         value="${safeText(scenario.question)}"
         align="center"
         width="${questionWidth}"
-        color="#ffffff"
+        color="#183247"
         position="0 ${questionY} 0.03"
         wrap-count="28"
       ></a-text>
@@ -407,14 +499,55 @@ function buildQuizPanelHtml(scenario, variant = 'mobile') {
         value="Arahkan cursor ke jawaban."
         align="center"
         width="${questionWidth}"
-        color="#fef08a"
-        position="0 -0.75 0.03"
-        wrap-count="28"
+        color="#4d89ae"
+        position="0 -1.25 0.03"
+        scale="${variant === 'vr' ? '0.5 0.5 0.5' : '0.5 0.5 0.5'}"
+        wrap-count="24"
       ></a-text>
     </a-entity>
   `;
 }
 
+/** Bangun HTML A-Frame untuk tombol 'Kembali' di dunia VR/mobile. */
+function buildWorldBackButtonHtml() {
+  return `
+    <a-entity
+      class="world-back-button clickable"
+      position="-1.65 2.05 3.2"
+      rotation="0 180 0"
+    >
+      <a-plane
+        class="world-back-button-bg clickable"
+        width="1"
+        height="0.38"
+        color="#f7fbfe"
+        opacity="0.97"
+        material="shader: flat; side: double"
+      ></a-plane>
+      <a-plane
+        class="clickable"
+        width="1"
+        height="0.05"
+        color="#78b7dc"
+        position="0 0.16 0.04"
+        material="shader: flat; side: double"
+      ></a-plane>
+      <a-text
+        class="clickable"
+        value="← Kembali"
+        align="center"
+        width="1.65"
+        color="#183247"
+        position="0 0 0.03"
+        wrap-count="12"
+      ></a-text>
+    </a-entity>
+  `;
+}
+
+/**
+ * Buat pesan transisi singkat berdasarkan tipe skenario (untuk overlay fade).
+ */
 async function getTransitionMessage(scenario) {
   if (!scenario) {
     return '';
@@ -428,6 +561,10 @@ async function getTransitionMessage(scenario) {
   return `Masuk ke: ${title}`;
 }
 
+/**
+ * Render skenario aktif ke layar sesuai mode (VR atau mobile).
+ * Menangani pembuatan scene, pemasangan video, binding event, dan transisi.
+ */
 async function renderActiveScenario() {
   const scenario = getActiveScenario();
 
@@ -469,7 +606,7 @@ async function renderActiveScenario() {
 
     bindSceneEvents(vrLeftMount);
     bindSceneEvents(vrRightMount);
-    applyVrCalibration();
+    applyCalibrationTarget('vr');
   }
 
   if (activeMode === 'mobile') {
@@ -478,7 +615,6 @@ async function renderActiveScenario() {
       return;
     }
 
-    mobileScenarioTitle.textContent = scenario.title;
 
     mobileMount.innerHTML = buildSceneHtml({
       mode: 'mobile',
@@ -506,6 +642,10 @@ async function renderActiveScenario() {
   }
 }
 
+/**
+ * Bangun string HTML A-Frame untuk sebuah scene (mobile atau VR eye).
+ * Menyusun aset video, videosphere, kamera, cursor, tombol kembali, dan panel kuis.
+ */
 function buildSceneHtml({ mode, eye = 'main', scenario }) {
   const isVr = mode === 'vr';
 
@@ -515,6 +655,7 @@ function buildSceneHtml({ mode, eye = 'main', scenario }) {
   const sceneId = `${mode}-${eye}-scene`;
 
   const quizHtml = buildQuizPanelHtml(scenario, isVr ? 'vr' : 'mobile');
+  const worldBackButtonHtml = buildWorldBackButtonHtml();
 
   const cameraControls = isVr
     ? 'look-controls="touchEnabled: false; mouseEnabled: false; magicWindowTrackingEnabled: true"'
@@ -582,11 +723,18 @@ function buildSceneHtml({ mode, eye = 'main', scenario }) {
         </a-camera>
       </a-entity>
 
+      ${worldBackButtonHtml}
       ${quizHtml}
     </a-scene>
   `;
 }
 
+/**
+ * Pasang event listener untuk video, opsi kuis, dan tombol kembali di root scene.
+ * - Video: ended/error
+ * - Quiz options: click, mouseenter, mouseleave
+ * - World back button: click -> kembali ke pemilihan mode
+ */
 function bindSceneEvents(root) {
   const videos = [...root.querySelectorAll('.scenario-video')];
 
@@ -606,7 +754,7 @@ function bindSceneEvents(root) {
       const bg = option.querySelector('.option-bg');
 
       if (bg) {
-        bg.setAttribute('color', '#1d4ed8');
+        bg.setAttribute('color', '#3f6f8d');
       }
     });
 
@@ -614,12 +762,20 @@ function bindSceneEvents(root) {
       const bg = option.querySelector('.option-bg');
 
       if (bg && !option.dataset.selected) {
-        bg.setAttribute('color', '#2563eb');
+        bg.setAttribute('color', '#6f9fbd');
       }
     });
   });
+
+  root.querySelectorAll('.world-back-button').forEach((button) => {
+    button.addEventListener('click', backToModeSelection);
+  });
 }
 
+/**
+ * Handler ketika sebuah video skenario selesai diputar.
+ * Menentukan langkah berikutnya berdasarkan `scenario.type`.
+ */
 function handleVideoEnded() {
   const currentScenario = getActiveScenario();
 
@@ -633,6 +789,12 @@ function handleVideoEnded() {
   }
 
   if (currentScenario.type === 'consequence') {
+    if (currentScenario.next && scenarioMap.has(currentScenario.next)) {
+      activeScenarioId = currentScenario.next;
+      renderActiveScenario();
+      return;
+    }
+
     if (currentScenario.returnTo && scenarioMap.has(currentScenario.returnTo)) {
       activeScenarioId = currentScenario.returnTo;
       shouldShowQuizImmediately = true;
@@ -656,6 +818,7 @@ function handleVideoEnded() {
   }
 }
 
+/** Coba play semua elemen video skenario; jika diblokir oleh browser, log peringatan. */
 async function playActiveVideos() {
   const videos = [...document.querySelectorAll('.scenario-video')];
 
@@ -674,6 +837,7 @@ async function playActiveVideos() {
   }
 }
 
+/** Tampilkan panel kuis untuk skenario aktif (jika ada pertanyaan dan opsi). */
 function showQuiz() {
   const currentScenario = getActiveScenario();
 
@@ -688,6 +852,7 @@ function showQuiz() {
   });
 }
 
+/** Reset status visual semua opsi kuis (hapus seleksi dan set warna default). */
 function resetOptionStates() {
   document.querySelectorAll('.quiz-option').forEach((option) => {
     option.dataset.selected = '';
@@ -695,11 +860,12 @@ function resetOptionStates() {
     const bg = option.querySelector('.option-bg');
 
     if (bg) {
-      bg.setAttribute('color', '#2563eb');
+      bg.setAttribute('color', '#6f9fbd');
     }
   });
 }
 
+/** Tampilkan pesan umpan balik di panel kuis (teks + warna). */
 function setFeedback(message, color = '#fef08a') {
   document.querySelectorAll('.feedback-text').forEach((text) => {
     text.setAttribute('value', message);
@@ -707,6 +873,7 @@ function setFeedback(message, color = '#fef08a') {
   });
 }
 
+/** Beri warna pada opsi yang dipilih: hijau jika benar, merah jika salah. */
 function colorSelectedOptions(index, correct) {
   document.querySelectorAll(`.quiz-option[data-option-index="${index}"]`).forEach((option) => {
     option.dataset.selected = 'true';
@@ -719,6 +886,10 @@ function colorSelectedOptions(index, correct) {
   });
 }
 
+/**
+ * Tangani aksi ketika opsi kuis dipilih: tampilkan umpan balik, lalu navigasi ke skenario berikutnya
+ * atau ke skenario konsekuensi sesuai properti `next` / `consequence` pada opsi.
+ */
 function handleOption(optionEntity) {
   const optionIndex = optionEntity.dataset.optionIndex;
   const correct = optionEntity.dataset.correct === 'true';
@@ -736,20 +907,21 @@ function handleOption(optionEntity) {
   );
 
   window.setTimeout(() => {
-    if (correct && nextScenario && scenarioMap.has(nextScenario)) {
-      activeScenarioId = nextScenario;
+    if (consequenceScenario && scenarioMap.has(consequenceScenario)) {
+      activeScenarioId = consequenceScenario;
       renderActiveScenario();
       return;
     }
 
-    if (!correct && consequenceScenario && scenarioMap.has(consequenceScenario)) {
-      activeScenarioId = consequenceScenario;
+    if (correct && nextScenario && scenarioMap.has(nextScenario)) {
+      activeScenarioId = nextScenario;
       renderActiveScenario();
       return;
     }
   }, 1200);
 }
 
+/** Cari elemen kursor gaze pertama di dalam root (atau dokumen). */
 function findGazeCursor(root = document) {
   if (!root) return null;
   if (root.querySelector) {
@@ -758,11 +930,16 @@ function findGazeCursor(root = document) {
   return null;
 }
 
+/** Kembalikan array semua elemen kursor gaze di dalam root. */
 function findGazeCursors(root = document) {
   if (!root) return [];
   return Array.from(root.querySelectorAll('.gaze-cursor'));
 }
 
+/**
+ * Trigger pemilihan opsi berdasarkan gaze cursor (digunakan oleh VR remote).
+ * Mencari elemen yang sedang di-intersect oleh raycaster dan memicu `handleOption`.
+ */
 function triggerSelectFromGaze(event) {
   const cursors = findGazeCursors();
 
@@ -794,6 +971,10 @@ function triggerSelectFromGaze(event) {
   console.warn('[VR Remote] Tidak menemukan opsi quiz di gaze cursor. Pastikan kursor mengarah ke .quiz-option.');
 }
 
+/**
+ * Cari gamepad yang sudah terhubung dan set `gamepadIndex` ke index pertama yang ditemukan.
+ * Dipanggil saat inisialisasi polling jika koneksi belum diketahui.
+ */
 function setGamepadIndexFromConnected() {
   const gamepads = navigator.getGamepads();
   for (let i = 0; i < gamepads.length; i += 1) {
@@ -819,6 +1000,10 @@ window.addEventListener('gamepaddisconnected', (event) => {
   }
 });
 
+/**
+ * Loop polling untuk membaca state gamepad. Jika tombol ditekan, trigger seleksi dari gaze.
+ * Dipanggil sekali untuk memulai loop via requestAnimationFrame.
+ */
 function pollGamepad() {
   requestAnimationFrame(pollGamepad);
 
@@ -843,6 +1028,10 @@ function pollGamepad() {
   prevButtonPressed = pressed;
 }
 
+/**
+ * Buka mode pemutaran ('vr' atau 'mobile') untuk modul yang aktif.
+ * Memastikan skenario tersedia, reset state, dan render skenario pertama.
+ */
 async function openMode(mode) {
   if (!activeModule || !scenarios.length) {
     alert('Pilih modul terlebih dahulu.');
@@ -858,12 +1047,14 @@ async function openMode(mode) {
   await renderActiveScenario();
 }
 
+/** Kembali ke layar pemilihan mode (tetap di modul yang sama). */
 function backToModeSelection() {
   activeMode = null;
   clearScenes();
   showScreen(modeScreen);
 }
 
+/** Kembali ke daftar modul (reset modul dan skenario aktif). */
 function backToModules() {
   activeModule = null;
   scenarios = [];
@@ -894,6 +1085,17 @@ document.getElementById('vrQuizButton')?.addEventListener('click', showQuiz);
 
 document.getElementById('backToModules')?.addEventListener('click', backToModules);
 
+document.getElementById('backToHomeFromSettings')?.addEventListener('click', () => {
+  activeModule = null;
+  scenarios = [];
+  scenarioMap = new Map();
+  activeScenarioId = null;
+  activeMode = null;
+
+  clearScenes();
+  showScreen(homeScreen);
+});
+
 document.getElementById('ipdSlider')?.addEventListener('input', (e) => {
   setCalibrationValues(Number(e.target.value), calibrationVShift);
 });
@@ -922,15 +1124,7 @@ document.getElementById('openSettingsButton')?.addEventListener('click', () => {
   if (ipdSliderStandalone) ipdSliderStandalone.value = calibrationIpdOffset;
   if (vShiftSliderStandalone) vShiftSliderStandalone.value = calibrationVShift;
 
-  applyPreviewCalibration();
-});
-
-document.getElementById('backToHomeFromSettings')?.addEventListener('click', () => {
-  showScreen(homeScreen);
-});
-
-document.querySelectorAll('[data-action="back-mode"]').forEach((button) => {
-  button.addEventListener('click', backToModeSelection);
+    applyCalibrationTarget('preview');
 });
 
 pollGamepad();

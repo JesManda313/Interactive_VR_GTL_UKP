@@ -21,7 +21,7 @@
       },
       {
         "label": "B",
-        "text": "Menambahkan lebih banyak bubuk alginate ke adonan yang sudah terlalu encer dan mengaduknya kembali.",
+        "text": "Menambahkan lebih banyak bubuk alginate ke adonan yang sudah terlalu encer dan mengaduknya kembali hingga konsistensi membaik.",
         "correct": false,
         "consequence": "konsekuensi_02_alginate_ditambah_bubuk"
       },
@@ -29,7 +29,7 @@
         "label": "C",
         "text": "Membuang adonan ini dan mengulang pengadukan dari awal dengan takaran bubuk dan air yang benar.",
         "correct": true,
-        "next": "segmen_03_sendok_cetak_individual"
+        "consequence": "konsekuensi_01_alginate_benar"
       }
     ]
   },
@@ -39,6 +39,13 @@
     "title": "Konsekuensi - Alginate Terlalu Encer Tetap Digunakan",
     "video": "/videos/01-pembukaan-anamnesis.mp4",
     "returnTo": "segmen_02_cetakan_awal"
+  },
+  {
+    "id": "konsekuensi_01_alginate_benar",
+    "type": "consequence",
+    "title": "Konsekuensi - Pilihan Benar: Ulangi dengan takaran tepat",
+    "video": "/videos/k02-alginate-benar.mp4",
+    "next": "segmen_03_sendok_cetak_individual"
   },
   {
     "id": "konsekuensi_02_alginate_ditambah_bubuk",
@@ -71,7 +78,7 @@
         "label": "B",
         "text": "Meminta pasien menggerakkan pipi seperti berkumur, lalu menekan ujung pipi ke arah dalam.",
         "correct": true,
-        "next": "segmen_05_final_impression"
+        "consequence": "konsekuensi_02_border_molding_benar"
       },
       {
         "label": "C",
@@ -87,6 +94,13 @@
     "title": "Konsekuensi - Gerakan Lateral Tidak Cukup",
     "video": "/videos/k03-border-molding-lateral.mp4",
     "returnTo": "segmen_04_border_molding"
+  },
+  {
+    "id": "konsekuensi_02_border_molding_benar",
+    "type": "consequence",
+    "title": "Konsekuensi - Border molding benar",
+    "video": "/videos/k03-border-molding-benar.mp4",
+    "next": "segmen_05_final_impression"
   },
   {
     "id": "konsekuensi_04_border_molding_mulut_terlalu_lebar",
@@ -126,7 +140,7 @@
         "label": "B",
         "text": "DVO = 57 mm. Freeway space 3 mm digunakan sebagai titik awal, kemudian diverifikasi dengan metode fonetik dan estetik sebelum difinalisasi.",
         "correct": true,
-        "next": "segmen_08_artikulator"
+        "consequence": "konsekuensi_03_dvo_benar"
       },
       {
         "label": "C",
@@ -142,6 +156,13 @@
     "title": "Konsekuensi - DVO Terlalu Tinggi",
     "video": "/videos/k05-dvo-terlalu-tinggi.mp4",
     "returnTo": "segmen_07_dvo"
+  },
+  {
+    "id": "konsekuensi_03_dvo_benar",
+    "type": "consequence",
+    "title": "Konsekuensi - Penetapan DVO benar",
+    "video": "/videos/k06-dvo-benar.mp4",
+    "next": "segmen_08_artikulator"
   },
   {
     "id": "konsekuensi_06_dvo_terlalu_rendah",
