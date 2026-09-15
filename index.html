@@ -15,141 +15,17 @@
   </head>
 
   <body>
-    <div id="appShell">
-      <!-- HOME / MODULE LIST -->
-      <section id="homeScreen" class="screen home-screen">
-        <aside class="home-sidebar">
-          <div class="ring-field"></div>
-          <p class="eyebrow">FKG UK Petra · Interactive Lab</p>
-          <h1>VR Learning</h1>
-          <p class="description">
-            Media pembelajaran prosedur klinis gigi berbasis video 360°,
-            mode VR, mode mobile, dan branching quiz.
-          </p>
-          <div class="home-actions">
-            <button id="openSettingsButton" class="btn-ghost">⚙ Pengaturan VR →</button>
-            <span class="home-hint">Kalibrasi jarak mata sebelum sesi</span>
-          </div>
-        </aside>
-
-        <main class="home-main">
-          <div class="section-header">
-            <h2>Daftar Modul</h2>
-            <p>Pilih untuk memulai</p>
-          </div>
-
-          <div id="moduleList" class="module-list module-list-grid">
-            <p>Memuat modul...</p>
-          </div>
-
-        </main>
-      </section>
-
-      <!-- SETTINGS / KALIBRASI VR -->
-      <section id="settingsScreen" class="screen settings-screen hidden">
-        <div class="ring-field"></div>
-        <div class="settings-column">
-          <button id="backToHomeFromSettings" class="btn-ghost">← Kembali</button>
-
-          <p class="eyebrow" style="margin-top: 22px;">Pengaturan</p>
-          <h1>Kalibrasi VR</h1>
-          <p class="description">
-            Sesuaikan jarak dan posisi gambar kiri-kanan agar nyaman di mata sebelum memulai
-            pembelajaran. Pasang kacamata VR sambil menggeser slider di bawah ini.
-          </p>
-
-          <div class="calibration-preview-wrapper">
-            <div id="previewLeftMount" class="preview-mount"><div class="preview-crosshair"></div></div>
-            <div id="previewRightMount" class="preview-mount"><div class="preview-crosshair"></div></div>
-          </div>
-
-          <label class="calibration-row">
-            <span>Jarak Mata (Kiri ↔ Kanan)</span>
-            <input type="range" id="ipdSliderStandalone" min="-40" max="40" step="1" value="0" />
-          </label>
-          <label class="calibration-row">
-            <span>Geser Vertikal</span>
-            <input type="range" id="vShiftSliderStandalone" min="-30" max="30" step="1" value="0" />
-          </label>
-
-          <button id="resetCalibrationButton" class="btn-ghost">Reset ke default</button>
-        </div>
-      </section>
-
-      <!-- MODE SELECTION -->
-      <section id="modeScreen" class="screen mode-screen hidden">
-        <div class="screen-nav-panel">
-          <button id="backToModules" class="btn-ghost">← Kembali ke Modul</button>
-          <span class="screen-nav-label">Pilih pengalaman belajar</span>
-        </div>
-
-        <div class="mode-heading">
-          <div>
-            <p class="eyebrow">Modul terpilih</p>
-            <h1 id="selectedModuleTitle">-</h1>
-            <p id="selectedModuleDescription" class="description">-</p>
-          </div>
-          <div class="module-meta">
-            <span id="selectedModuleSegments">- segmen</span>
-            <span id="selectedModuleDecisions">- decision point</span>
-          </div>
-        </div>
-
-        <div class="mode-grid">
-          <button id="openVrMode" class="mode-card">
-            <!-- <span class="mode-icon">🥽</span> -->
-            <span class="mode-text">
-              <strong>Mode VR</strong>
-              <small>Tampilan kiri-kanan untuk headset Shinecon VR. Pilih jawaban dengan remote.</small>
-            </span>
-            <span class="mode-go">→</span>
-          </button>
-
-          <button id="openMobileMode" class="mode-card">
-            <!-- <span class="mode-icon">📱</span> -->
-            <span class="mode-text">
-              <strong>Mode Mobile</strong>
-              <small>Satu layar penuh. Geser view dengan drag dan pilih jawaban dengan tap.</small>
-            </span>
-            <span class="mode-go">→</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- MOBILE PLAYER -->
-      <section id="mobileScreen" class="screen player-screen hidden">
-        <div id="mobileSceneMount" class="scene-mount full-scene"></div>
-        <div id="mobileFadeOverlay" class="fade-overlay">
-          <div id="mobileFadeText" class="fade-message"></div>
-        </div>
-      </section>
-
-      <!-- VR PLAYER — tanpa navbar, kontrol mengambang -->
-      <section id="vrScreen" class="screen player-screen hidden">
-        <div class="vr-scenario-tag">
-          <span class="tag-eyebrow">Sedang berjalan</span>
-          <span id="vrScenarioTitle">-</span>
-        </div>
-
-        <!-- Mode VR tetap split kiri-kanan -->
-        <div class="vr-split-wrapper">
-          <div class="vr-eye-panel">
-            <div id="vrLeftMount" class="scene-mount half-scene"></div>
-            <div class="vr-fade-panel">
-              <span class="vr-eye-label">MATA KIRI</span>
-              <div id="vrFadeTextLeft" class="fade-message"></div>
-            </div>
-          </div>
-          <div class="vr-eye-panel">
-            <div id="vrRightMount" class="scene-mount half-scene"></div>
-            <div class="vr-fade-panel">
-              <span class="vr-eye-label">MATA KANAN</span>
-              <div id="vrFadeTextRight" class="fade-message"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+    <!--
+      Shell only. Setiap layar di-extend dari partial di src/pages/:
+        - home.html          -> #homeScreen, #moduleList
+        - settings.html      -> #settingsScreen (kalibrasi VR)
+        - mode.html          -> #modeScreen (pilih VR / Mobile)
+        - mobile-player.html -> #mobileScreen
+        - vr-player.html     -> #vrScreen
+      Partial di-inline saat build via `?raw` import di src/main.js,
+      lalu disuntik ke #appShell sebelum logika dijalankan.
+    -->
+    <div id="appShell"></div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

@@ -1,0 +1,29 @@
+<!-- SETTINGS / KALIBRASI VR -->
+<section id="settingsScreen" class="screen settings-screen calibration-screen hidden">
+  <div class="ring-field"></div>
+  <div class="settings-column">
+    <button id="backToHomeFromSettings" class="btn-ghost">← Kembali ke Daftar Modul</button>
+
+    <p class="eyebrow" style="margin-top: 22px;">Modul Kalibrasi</p>
+    <h1>Kalibrasi Headset VR</h1>
+    <p class="description">
+      Pasang headset VR. Tekan B untuk memilih panel kiri, Y untuk memilih panel kanan,
+      lalu gerakkan stik joystick ke kiri atau kanan untuk menggeser panel aktif.
+    </p>
+
+    <div class="calibration-preview-wrapper">
+      <div id="previewLeftMount" class="preview-mount selected">
+        <span class="preview-eye-label">MATA KIRI</span>
+        <div class="preview-crosshair"></div>
+      </div>
+      <div id="previewRightMount" class="preview-mount">
+        <span class="preview-eye-label">MATA KANAN</span>
+        <div class="preview-crosshair"></div>
+      </div>
+    </div>
+
+    <p id="calibrationEyeStatus" class="calibration-eye-status">Panel aktif: mata kiri</p>
+
+    <button id="resetCalibrationButton" class="btn-ghost">Reset ke default</button>
+  </div>
+</section>
