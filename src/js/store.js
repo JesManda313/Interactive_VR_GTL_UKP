@@ -8,7 +8,7 @@ export const MODULES_URL = '/content/modules.json';
 export const CALIBRATION_STORAGE_KEY = 'gtlvr_calibration_v2';
 
 export const B_BUTTON_INDEX = 1;
-export const Y_BUTTON_INDEX = 4;
+export const Y_BUTTON_INDEX = 9;
 
 export const store = {
   // daftar modul yang sedang dipilih
