@@ -1,10 +1,19 @@
 [
   {
+    "id": "00-kalibrasi-vr",
+    "type": "calibration",
+    "title": "Kalibrasi Headset VR",
+    "subtitle": "Atur posisi tampilan mata kiri dan kanan",
+    "description": "Sesuaikan posisi tampilan kiri dan kanan secara terpisah sambil headset VR tetap terpasang.",
+    "totalSegments": 0,
+    "totalDecisionPoints": 0
+  },
+  {
     "id": "01-modul-gtl",
     "title": "Prosedur Klinis Gigi Tiruan Lengkap",
     "subtitle": "Video 360° POV Operator dengan Branching Quiz",
-    "description": "Modul ini membahas alur prosedur GTL dari anamnesis, pencetakan awal, border molding, penetapan DVO, hingga insersi.",
-    "totalSegments": 14,
+    "description": "Modul ini membahas tujuh tahap prosedur klinis chairside Gigi Tiruan Lengkap: cetakan awal, trial sendok cetak individual dan border molding, final impression, penetapan gigit, try-in, hingga insersi GTL final.",
+    "totalSegments": 7,
     "totalDecisionPoints": 3,
     "scenarioUrl": "/content/01-modul-gtl/scenarios.json"
   }

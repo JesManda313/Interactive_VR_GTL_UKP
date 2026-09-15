@@ -1,229 +1,155 @@
 [
-  {
-    "id": "segmen_01_pembukaan_anamnesis",
-    "type": "linear",
-    "title": "Segmen 1 - Pembukaan & Anamnesis",
-    "video": "/videos/01-pembukaan-anamnesis.mp4",
-    "next": "segmen_02_cetakan_awal"
-  },
-  {
-    "id": "segmen_02_cetakan_awal",
-    "type": "decision",
-    "title": "Segmen 2 - Cetakan Awal",
-    "video": "/videos/01-pembukaan-anamnesis.mp4",
-    "question": "Saat mengaduk alginate, operator menyadari adonan terlalu encer karena rasio air terlalu banyak dibanding bubuk. Tindakan yang paling tepat adalah:",
-    "options": [
-      {
-        "label": "A",
-        "text": "Tetap menggunakan adonan ini karena konsistensi encer masih bisa menghasilkan cetakan yang cukup baik selama tekanan insersi terjaga.",
-        "correct": false,
-        "consequence": "konsekuensi_01_alginate_tetap_digunakan"
-      },
-      {
-        "label": "B",
-        "text": "Menambahkan lebih banyak bubuk alginate ke adonan yang sudah terlalu encer dan mengaduknya kembali hingga konsistensi membaik.",
-        "correct": false,
-        "consequence": "konsekuensi_02_alginate_ditambah_bubuk"
-      },
-      {
-        "label": "C",
-        "text": "Membuang adonan ini dan mengulang pengadukan dari awal dengan takaran bubuk dan air yang benar.",
-        "correct": true,
-        "consequence": "konsekuensi_01_alginate_benar"
-      }
-    ]
-  },
-  {
-    "id": "konsekuensi_01_alginate_tetap_digunakan",
-    "type": "consequence",
-    "title": "Konsekuensi - Alginate Terlalu Encer Tetap Digunakan",
-    "video": "/videos/01-pembukaan-anamnesis.mp4",
-    "returnTo": "segmen_02_cetakan_awal"
-  },
-  {
-    "id": "konsekuensi_01_alginate_benar",
-    "type": "consequence",
-    "title": "Konsekuensi - Pilihan Benar: Ulangi dengan takaran tepat",
-    "video": "/videos/k02-alginate-benar.mp4",
-    "next": "segmen_03_sendok_cetak_individual"
-  },
-  {
-    "id": "konsekuensi_02_alginate_ditambah_bubuk",
-    "type": "consequence",
-    "title": "Konsekuensi - Alginate Ditambah Bubuk",
-    "video": "/videos/k02-alginate-ditambah-bubuk.mp4",
-    "returnTo": "segmen_02_cetakan_awal"
-  },
-  {
-    "id": "segmen_03_sendok_cetak_individual",
-    "type": "linear",
-    "title": "Segmen 3 - Pembuatan Sendok Cetak Individual",
-    "video": "/videos/03-sendok-cetak-individual.mp4",
-    "next": "segmen_04_border_molding"
-  },
-  {
-    "id": "segmen_04_border_molding",
-    "type": "decision",
-    "title": "Segmen 4 - Border Molding",
-    "video": "/videos/04-border-molding.mp4",
-    "question": "Pada saat melakukan border molding di area bukal kanan rahang atas, gerakan otot yang tepat untuk membentuk tepi compound di daerah ini adalah:",
-    "options": [
-      {
-        "label": "A",
-        "text": "Menarik sudut mulut pasien ke lateral dengan jari telunjuk operator.",
-        "correct": false,
-        "consequence": "konsekuensi_03_border_molding_lateral"
-      },
-      {
-        "label": "B",
-        "text": "Meminta pasien menggerakkan pipi seperti berkumur, lalu menekan ujung pipi ke arah dalam.",
-        "correct": true,
-        "consequence": "konsekuensi_02_border_molding_benar"
-      },
-      {
-        "label": "C",
-        "text": "Meminta pasien membuka mulut selebar mungkin dan mengarahkan pipi ke depan.",
-        "correct": false,
-        "consequence": "konsekuensi_04_border_molding_mulut_terlalu_lebar"
-      }
-    ]
-  },
-  {
-    "id": "konsekuensi_03_border_molding_lateral",
-    "type": "consequence",
-    "title": "Konsekuensi - Gerakan Lateral Tidak Cukup",
-    "video": "/videos/k03-border-molding-lateral.mp4",
-    "returnTo": "segmen_04_border_molding"
-  },
-  {
-    "id": "konsekuensi_02_border_molding_benar",
-    "type": "consequence",
-    "title": "Konsekuensi - Border molding benar",
-    "video": "/videos/k03-border-molding-benar.mp4",
-    "next": "segmen_05_final_impression"
-  },
-  {
-    "id": "konsekuensi_04_border_molding_mulut_terlalu_lebar",
-    "type": "consequence",
-    "title": "Konsekuensi - Mulut Dibuka Terlalu Lebar",
-    "video": "/videos/k04-border-molding-mulut-terlalu-lebar.mp4",
-    "returnTo": "segmen_04_border_molding"
-  },
-  {
-    "id": "segmen_05_final_impression",
-    "type": "linear",
-    "title": "Segmen 5 - Final Impression",
-    "video": "/videos/05-final-impression.mp4",
-    "next": "segmen_06_bite_rim"
-  },
-  {
-    "id": "segmen_06_bite_rim",
-    "type": "linear",
-    "title": "Segmen 6 - Pembuatan Bite Rim & Wax Occlusal Rim",
-    "video": "/videos/06-bite-rim.mp4",
-    "next": "segmen_07_dvo"
-  },
-  {
-    "id": "segmen_07_dvo",
-    "type": "decision",
-    "title": "Segmen 7 - Penetapan Gigit: DVO",
-    "video": "/videos/07-dvo.mp4",
-    "question": "DVR terukur 60 mm. Operator akan menetapkan DVO dengan mengurangi freeway space dari DVR. Berapakah nilai DVO yang tepat, dan berapakah freeway space yang digunakan pada kasus GTL pasien edentulous umumnya?",
-    "options": [
-      {
-        "label": "A",
-        "text": "DVO = 58 mm. Freeway space 2 mm digunakan karena ini nilai yang selalu baku untuk semua pasien GTL.",
-        "correct": false,
-        "consequence": "konsekuensi_05_dvo_terlalu_tinggi"
-      },
-      {
-        "label": "B",
-        "text": "DVO = 57 mm. Freeway space 3 mm digunakan sebagai titik awal, kemudian diverifikasi dengan metode fonetik dan estetik sebelum difinalisasi.",
-        "correct": true,
-        "consequence": "konsekuensi_03_dvo_benar"
-      },
-      {
-        "label": "C",
-        "text": "DVO = 54 mm. Freeway space 6 mm digunakan agar pasien merasa lebih nyaman dan tidak terasa sesak.",
-        "correct": false,
-        "consequence": "konsekuensi_06_dvo_terlalu_rendah"
-      }
-    ]
-  },
-  {
-    "id": "konsekuensi_05_dvo_terlalu_tinggi",
-    "type": "consequence",
-    "title": "Konsekuensi - DVO Terlalu Tinggi",
-    "video": "/videos/k05-dvo-terlalu-tinggi.mp4",
-    "returnTo": "segmen_07_dvo"
-  },
-  {
-    "id": "konsekuensi_03_dvo_benar",
-    "type": "consequence",
-    "title": "Konsekuensi - Penetapan DVO benar",
-    "video": "/videos/k06-dvo-benar.mp4",
-    "next": "segmen_08_artikulator"
-  },
-  {
-    "id": "konsekuensi_06_dvo_terlalu_rendah",
-    "type": "consequence",
-    "title": "Konsekuensi - DVO Terlalu Rendah",
-    "video": "/videos/k06-dvo-terlalu-rendah.mp4",
-    "returnTo": "segmen_07_dvo"
-  },
-  {
-    "id": "segmen_08_artikulator",
-    "type": "linear",
-    "title": "Segmen 8 - Penanaman Model ke Artikulator",
-    "video": "/videos/08-artikulator.mp4",
-    "next": "segmen_09_seleksi_penyusunan_gigi"
-  },
-  {
-    "id": "segmen_09_seleksi_penyusunan_gigi",
-    "type": "linear",
-    "title": "Segmen 9 - Seleksi & Penyusunan Gigi Tiruan",
-    "video": "/videos/09-seleksi-penyusunan-gigi.mp4",
-    "next": "segmen_10_try_in"
-  },
-  {
-    "id": "segmen_10_try_in",
-    "type": "linear",
-    "title": "Segmen 10 - Try-In & Rangkuman Pembelajaran",
-    "video": "/videos/10-try-in.mp4",
-    "next": "segmen_11_selective_grinding"
-  },
-  {
-    "id": "segmen_11_selective_grinding",
-    "type": "linear",
-    "title": "Segmen 11 - Selective Grinding pada Try-In",
-    "video": "/videos/11-selective-grinding.mp4",
-    "next": "segmen_12_processing"
-  },
-  {
-    "id": "segmen_12_processing",
-    "type": "linear",
-    "title": "Segmen 12 - Processing, Finishing & Polishing",
-    "video": "/videos/12-processing-finishing-polishing.mp4",
-    "next": "segmen_13_remounting"
-  },
-  {
-    "id": "segmen_13_remounting",
-    "type": "linear",
-    "title": "Segmen 13 - Remounting & Oklusal Adjustment",
-    "video": "/videos/13-remounting-oklusal-adjustment.mp4",
-    "next": "segmen_14_insersi"
-  },
-  {
-    "id": "segmen_14_insersi",
-    "type": "linear",
-    "title": "Segmen 14 - Insersi & Instruksi Pasien",
-    "video": "/videos/14-insersi-instruksi-pasien.mp4",
-    "next": "selesai"
-  },
-  {
-    "id": "selesai",
-    "type": "end",
-    "title": "Selesai",
-    "video": "/videos/15-penutup.mp4"
-  }
+    {
+        "id": "segmen_01_pembukaan",
+        "type": "linear",
+        "title": "Segmen 1 - Pembukaan Dosen Pembimbing",
+        "camera": "insta360",
+        "video": "/videos/01-pembukaan.mp4",
+        "next": "segmen_02_cetakan_awal"
+    },
+    {
+        "id": "segmen_02_cetakan_awal",
+        "type": "decision",
+        "title": "Segmen 2 - Cetakan Awal (Preliminary Impression)",
+        "camera": "insta360",
+        "video": "/videos/02-cetakan-awal.mp4",
+        "question": "Cetakan alginate rahang atas sudah diinsersikan. Pasien terlihat tidak nyaman. Tindakan apa yang tepat?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Langsung lepaskan sendok cetak karena pasien tidak nyaman — cetakan bisa diulang.",
+                "correct": false,
+                "consequence": "konsekuensi_01_cetakan_dilepas_prematur"
+            },
+            {
+                "label": "B",
+                "text": "Tenangkan pasien, minta bernapas melalui hidung, pertahankan stabilisasi bilateral hingga alginate fully set (2–3 menit).",
+                "correct": true,
+                "consequence": "konsekuensi_01_cetakan_benar"
+            }
+        ]
+    },
+    {
+        "id": "konsekuensi_01_cetakan_dilepas_prematur",
+        "type": "consequence",
+        "title": "Konsekuensi - Cetakan Dilepas Prematur",
+        "camera": "insta360",
+        "video": "/videos/k01-cetakan-dilepas-prematur.mp4",
+        "returnTo": "segmen_02_cetakan_awal"
+    },
+    {
+        "id": "konsekuensi_01_cetakan_benar",
+        "type": "consequence",
+        "title": "Konsekuensi - Cetakan Awal Benar",
+        "camera": "insta360",
+        "video": "/videos/k01-cetakan-benar.mp4",
+        "next": "segmen_03_trial_sci_border_molding"
+    },
+    {
+        "id": "segmen_03_trial_sci_border_molding",
+        "type": "linear",
+        "title": "Segmen 3 - Trial SCI + Border Molding",
+        "camera": "sony-a6400",
+        "video": "/videos/03-trial-sci-border-molding.mp4",
+        "next": "segmen_04_final_impression"
+    },
+    {
+        "id": "segmen_04_final_impression",
+        "type": "decision",
+        "title": "Segmen 4 - Final Impression",
+        "camera": "sony-a6400",
+        "video": "/videos/04-final-impression.mp4",
+        "question": "Ditemukan void di palatum anterior dan tray show-through di palatum tengah. Tindakan apa yang paling tepat?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Tambahkan PVS light body di area void dan show-through menggunakan syringe, lalu tekan kembali ke mulut.",
+                "correct": false,
+                "consequence": "konsekuensi_02_final_impression_ditambah_pvs"
+            },
+            {
+                "label": "B",
+                "text": "Buang cetakan dan ulangi seluruh final impression dari awal.",
+                "correct": true,
+                "consequence": "konsekuensi_02_final_impression_benar"
+            }
+        ]
+    },
+    {
+        "id": "konsekuensi_02_final_impression_ditambah_pvs",
+        "type": "consequence",
+        "title": "Konsekuensi - PVS Ditambahkan pada Cetakan Lama",
+        "camera": "sony-a6400",
+        "video": "/videos/k02-final-impression-ditambah-pvs.mp4",
+        "returnTo": "segmen_04_final_impression"
+    },
+    {
+        "id": "konsekuensi_02_final_impression_benar",
+        "type": "consequence",
+        "title": "Konsekuensi - Final Impression Diulang dengan Benar",
+        "camera": "sony-a6400",
+        "video": "/videos/k02-final-impression-benar.mp4",
+        "next": "segmen_05_penetapan_gigit"
+    },
+    {
+        "id": "segmen_05_penetapan_gigit",
+        "type": "decision",
+        "title": "Segmen 5 - Penetapan Gigit + Bite Registration",
+        "camera": "sony-a6400",
+        "video": "/videos/05-penetapan-gigit-bite-registration.mp4",
+        "question": "Saat kedua bite rim diinsersikan bersamaan, tampak permukaan oklusal bite rim RB condong ke sisi kiri — belum sejajar dengan bite rim RA. Tindakan yang tepat sebelum bite registration dilakukan adalah:",
+        "options": [
+            {
+                "label": "A",
+                "text": "Lanjutkan bite registration sekarang — kemiringan kecil tidak akan mempengaruhi hasil secara signifikan dan bisa dikoreksi saat try-in.",
+                "correct": false,
+                "consequence": "konsekuensi_03_bite_registration_miring"
+            },
+            {
+                "label": "B",
+                "text": "Koreksi posisi bite rim RB terlebih dahulu: tambahkan atau kurangi wax di sisi yang rendah hingga permukaan oklusal bite rim RA dan RB sejajar dan simetris, lalu lakukan bite registration.",
+                "correct": true,
+                "consequence": "konsekuensi_03_bite_registration_benar"
+            }
+        ]
+    },
+    {
+        "id": "konsekuensi_03_bite_registration_miring",
+        "type": "consequence",
+        "title": "Konsekuensi - Bite Registration dengan Bite Rim Miring",
+        "camera": "sony-a6400",
+        "video": "/videos/k03-bite-registration-miring.mp4",
+        "returnTo": "segmen_05_penetapan_gigit"
+    },
+    {
+        "id": "konsekuensi_03_bite_registration_benar",
+        "type": "consequence",
+        "title": "Konsekuensi - Bite Registration Benar",
+        "camera": "sony-a6400",
+        "video": "/videos/k03-bite-registration-benar.mp4",
+        "next": "segmen_06_try_in"
+    },
+    {
+        "id": "segmen_06_try_in",
+        "type": "linear",
+        "title": "Segmen 6 - Pasang Coba Gigi Malam (Try-In)",
+        "camera": "sony-a6400",
+        "video": "/videos/06-try-in.mp4",
+        "next": "segmen_07_insersi_gtl"
+    },
+    {
+        "id": "segmen_07_insersi_gtl",
+        "type": "linear",
+        "title": "Segmen 7 - Insersi GTL Final",
+        "camera": "insta360",
+        "video": "/videos/07-insersi-gtl.mp4",
+        "next": "selesai"
+    },
+    {
+        "id": "selesai",
+        "type": "end",
+        "title": "Selesai",
+        "camera": "insta360",
+        "video": "/videos/08-penutup.mp4"
+    }
 ]
