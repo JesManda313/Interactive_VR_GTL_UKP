@@ -1,6 +1,55 @@
-<!-- MOBILE PLAYER -->
+<!-- MOBILE PLAYER: 360 (A-Frame videosphere) atau FLAT fullscreen (Sony A6400) -->
 <section id="mobileScreen" class="screen player-screen hidden">
+  <!-- Mode 360: scene A-Frame -->
   <div id="mobileSceneMount" class="scene-mount full-scene"></div>
+
+  <!-- Mode FLAT (camera: sony-a6400): video langsung full layar HP, tanpa environment bioskop -->
+  <div id="mobileFlatWrap" class="mobile-flat-wrap hidden">
+    <div class="mobile-flat-topbar">
+      <button id="mobileFlatBack" class="mobile-flat-back" type="button">‹ Kembali</button>
+      <div class="mobile-flat-titlebox">
+        <strong id="mobileFlatTitle">-</strong>
+        <span id="mobileFlatTag">-</span>
+      </div>
+      <button id="mobileFlatRotate" class="mobile-flat-back" type="button">⛶ Landscape</button>
+    </div>
+
+    <video
+      id="mobileFlatVideo"
+      class="scenario-video mobile-flat-video"
+      controls
+      playsinline
+      webkit-playsinline
+      preload="metadata"
+      crossorigin="anonymous"
+    ></video>
+
+    <!-- Hint saat HP masih portrait: ajak putar ke landscape -->
+    <div id="mobileRotateHint" class="mobile-rotate-hint hidden">
+      <span>🔄 Putar HP ke landscape untuk tampilan penuh</span>
+      <button id="mobileRotateGo" type="button">Paksa landscape</button>
+    </div>
+
+    <!-- Branching: popup muncul di depan video -->
+    <div id="mobileQuizPopup" class="mobile-quiz-popup hidden">
+      <div class="mobile-quiz-card">
+        <span class="mobile-quiz-eyebrow">Decision Point</span>
+        <h3 id="mobileQuizQuestion">-</h3>
+        <div id="mobileQuizOptions" class="mobile-quiz-options"></div>
+        <p id="mobileQuizFeedback" class="mobile-quiz-feedback"></p>
+      </div>
+    </div>
+
+    <div id="mobileEndPopup" class="mobile-quiz-popup hidden">
+      <div class="mobile-quiz-card">
+        <span class="mobile-quiz-eyebrow">Selesai</span>
+        <h3 id="mobileEndTitle">Modul selesai</h3>
+        <p class="mobile-quiz-feedback">Semua segmen sudah diputar.</p>
+        <button id="mobileEndBack" class="btn-primary" type="button">Kembali ke mode</button>
+      </div>
+    </div>
+  </div>
+
   <div id="mobileFadeOverlay" class="fade-overlay">
     <div id="mobileFadeText" class="fade-message"></div>
   </div>
