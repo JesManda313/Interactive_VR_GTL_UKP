@@ -6,7 +6,8 @@
 import { MODULES_URL, store } from './store.js';
 import { safeText } from './utils.js';
 import { loadScenarios } from './scenario.js';
-import { openCalibrationScreen, showScreen } from './navigation.js';
+import { applyLocalVideos, missingRemotes, purgeOrphanDownloads, runDownloadFlow } from './download-manager.js';
+import { backToModules, openCalibrationScreen, showScreen } from './navigation.js';
 
 /** Ambil manifest modul dari server dan render daftar modul. */
 export async function loadModules() {
@@ -87,6 +88,22 @@ export async function openModule(moduleId) {
     `${store.activeModule.totalDecisionPoints ?? '-'} decision point`;
 
   await loadScenarios(store.activeModule.scenarioUrl);
+
+  // Bersihkan file yatim (fileId tak lagi dirujuk, mis. file pilot lama),
+  // petakan video lokal yang sudah terunduh, lalu tahan di layar download
+  // bila masih ada paket yang kurang.
+  await purgeOrphanDownloads(store.scenarios);
+  await applyLocalVideos(store.scenarios);
+  const missing = await missingRemotes(store.scenarios);
+
+  if (missing.length) {
+    showScreen('download');
+    runDownloadFlow(store.scenarios, {
+      onDone: () => showScreen('mode'),
+      onBack: () => backToModules(),
+    });
+    return;
+  }
 
   showScreen('mode');
 }

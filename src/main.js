@@ -1,20 +1,20 @@
 // Bootstrap — inject page partials, then init per-page modules.
 // Pages (html):  src/pages/home.html, settings.html, mode.html,
-//                mobile-player.html, vr-player.html
+//                download.html, mobile-player.html, vr-player.html
 // Logic (js):    src/js/home.js, settings.js, mode.js, vr-player.js
 //                (+ domain: store, utils, calibration, video, fade,
-//                scene-builders, scenario, navigation, gaze)
-// Shared:        src/js/store.js, utils.js, calibration.js, video.js, fade.js,
-//                scene-builders.js, scenario.js, navigation.js, gaze.js
+//                scene-builders, scenario, navigation, gaze,
+//                download-manager)
 import homeHtml from './pages/home.html?raw';
 import settingsHtml from './pages/settings.html?raw';
 import modeHtml from './pages/mode.html?raw';
+import downloadHtml from './pages/download.html?raw';
 import mobilePlayerHtml from './pages/mobile-player.html?raw';
 import vrPlayerHtml from './pages/vr-player.html?raw';
 
 // Suntik semua layar ke #appShell sebelum modul page di-init.
 document.getElementById('appShell').innerHTML =
-  homeHtml + settingsHtml + modeHtml + mobilePlayerHtml + vrPlayerHtml;
+  homeHtml + settingsHtml + modeHtml + downloadHtml + mobilePlayerHtml + vrPlayerHtml;
 
 import { store } from './js/store.js';
 import { triggerSelectFromGaze } from './js/gaze.js';

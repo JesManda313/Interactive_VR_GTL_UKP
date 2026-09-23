@@ -12,6 +12,7 @@ const SCREEN_IDS = {
   home: 'homeScreen',
   settings: 'settingsScreen',
   mode: 'modeScreen',
+  download: 'downloadScreen',
   mobile: 'mobileScreen',
   vr: 'vrScreen',
 };
@@ -19,7 +20,7 @@ const SCREEN_IDS = {
 /**
  * Ganti layar yang terlihat ke screen bernama `name`.
  * Menyembunyikan semua screen yang diketahui lalu menampilkan yang dipilih.
- * @param {'home'|'settings'|'mode'|'mobile'|'vr'} name
+ * @param {'home'|'settings'|'mode'|'download'|'mobile'|'vr'} name
  */
 export function showScreen(name) {
   Object.values(SCREEN_IDS).forEach((id) => {
@@ -49,8 +50,6 @@ export function backToModules() {
 }
 
 export function renderCalibrationScene() {
-  document.getElementById('vrScenarioTitle').textContent = 'Kalibrasi Headset VR';
-
   const vrLeftMount = document.getElementById('vrLeftMount');
   const vrRightMount = document.getElementById('vrRightMount');
 
