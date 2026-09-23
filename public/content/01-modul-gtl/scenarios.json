@@ -3,16 +3,23 @@
         "id": "segmen_01_pembukaan",
         "type": "linear",
         "title": "Segmen 1 - Pembukaan Dosen Pembimbing",
-        "camera": "insta360",
+        "projection": "360",
         "video": "/videos/01-pembukaan.mp4",
+        "remote": {
+            "fileId": "17qyfI0l-o-Lh87Tl7G4_46I9j9F5TDR5",
+            "fileName": "segmen 1.mp4",
+            "size": 219775521,
+            "md5": "1341aa4aa286e9fe9d70aa2df887f54d",
+            "version": 1
+        },
         "next": "segmen_02_cetakan_awal"
     },
     {
         "id": "segmen_02_cetakan_awal",
         "type": "decision",
         "title": "Segmen 2 - Cetakan Awal (Preliminary Impression)",
-        "camera": "insta360",
-        "video": "/videos/02-cetakan-awal.mp4",
+        "projection": "360",
+        "video": "/videos/01-pembukaan.mp4",
         "question": "Cetakan alginate rahang atas sudah diinsersikan. Pasien terlihat tidak nyaman. Tindakan apa yang tepat?",
         "options": [
             {
@@ -20,6 +27,7 @@
                 "text": "Langsung lepaskan sendok cetak karena pasien tidak nyaman — cetakan bisa diulang.",
                 "correct": false,
                 "consequence": "konsekuensi_01_cetakan_dilepas_prematur"
+
             },
             {
                 "label": "B",
@@ -33,32 +41,45 @@
         "id": "konsekuensi_01_cetakan_dilepas_prematur",
         "type": "consequence",
         "title": "Konsekuensi - Cetakan Dilepas Prematur",
-        "camera": "insta360",
-        "video": "/videos/k01-cetakan-dilepas-prematur.mp4",
+        "projection": "360",
+        "video": "/videos/01-pembukaan.mp4",
         "returnTo": "segmen_02_cetakan_awal"
     },
     {
         "id": "konsekuensi_01_cetakan_benar",
         "type": "consequence",
         "title": "Konsekuensi - Cetakan Awal Benar",
-        "camera": "insta360",
-        "video": "/videos/k01-cetakan-benar.mp4",
+        "projection": "360",
+        "video": "/videos/01-pembukaan.mp4",
         "next": "segmen_03_trial_sci_border_molding"
     },
     {
         "id": "segmen_03_trial_sci_border_molding",
         "type": "linear",
         "title": "Segmen 3 - Trial SCI + Border Molding",
-        "camera": "sony-a6400",
-        "video": "/videos/03-trial-sci-border-molding.mp4",
+        "projection": "flat",
+        "remote": {
+            "fileId": "1vuW8JxLj3hVet9dgsOqBlaD2EF2neVaA",
+            "fileName": "segmen 3.mp4",
+            "size": 115935722,
+            "md5": "0a2e830e3cd35b391f58dce588cca0de",
+            "version": 1
+        },
         "next": "segmen_04_final_impression"
     },
     {
         "id": "segmen_04_final_impression",
         "type": "decision",
         "title": "Segmen 4 - Final Impression",
-        "camera": "sony-a6400",
-        "video": "/videos/04-final-impression.mp4",
+        "projection": "flat",
+        "video": "/videos/C0268.MP4",
+        "remote": {
+            "fileId": "1SbpNPzl86vu6Y2wBcToM2YgiHfphHYuA",
+            "fileName": "segmen 4.mp4",
+            "size": 141339737,
+            "md5": "dc5100df322d2109a94425859fc46b97",
+            "version": 1
+        },
         "question": "Ditemukan void di palatum anterior dan tray show-through di palatum tengah. Tindakan apa yang paling tepat?",
         "options": [
             {
@@ -79,24 +100,45 @@
         "id": "konsekuensi_02_final_impression_ditambah_pvs",
         "type": "consequence",
         "title": "Konsekuensi - PVS Ditambahkan pada Cetakan Lama",
-        "camera": "sony-a6400",
-        "video": "/videos/k02-final-impression-ditambah-pvs.mp4",
+        "projection": "flat",
+        "video": "/videos/C0268.MP4",
+        "remote": {
+            "fileId": "1-KegS3qgJaaQqazR2buXK46tqwXgU-HP",
+            "fileName": "konsekuensi salah segmen 4.mp4",
+            "size": 52466373,
+            "md5": "540d4e901362d9276db0f3ab6d172555",
+            "version": 1
+        },
         "returnTo": "segmen_04_final_impression"
     },
     {
         "id": "konsekuensi_02_final_impression_benar",
         "type": "consequence",
         "title": "Konsekuensi - Final Impression Diulang dengan Benar",
-        "camera": "sony-a6400",
-        "video": "/videos/k02-final-impression-benar.mp4",
+        "projection": "flat",
+        "video": "/videos/C0268.MP4",
+        "remote": {
+            "fileId": "19kpE200YtZqw2FYz_HcgBAIUdzg_79NR",
+            "fileName": "konsekuensi benar segmen 4.mp4",
+            "size": 51100436,
+            "md5": "10cff82829bdeaff0c54bd7f4d8839df",
+            "version": 1
+        },
         "next": "segmen_05_penetapan_gigit"
     },
     {
         "id": "segmen_05_penetapan_gigit",
         "type": "decision",
         "title": "Segmen 5 - Penetapan Gigit + Bite Registration",
-        "camera": "sony-a6400",
-        "video": "/videos/05-penetapan-gigit-bite-registration.mp4",
+        "projection": "flat",
+        "video": "/videos/C0268.MP4",
+        "remote": {
+            "fileId": "1nXnMXRgM3SwG_xuoGBqnHVC-4UBWisRW",
+            "fileName": "segmen 5.mp4",
+            "size": 193836985,
+            "md5": "aeeb7db2ade96d32badc59287eb5cd4c",
+            "version": 1
+        },
         "question": "Saat kedua bite rim diinsersikan bersamaan, tampak permukaan oklusal bite rim RB condong ke sisi kiri — belum sejajar dengan bite rim RA. Tindakan yang tepat sebelum bite registration dilakukan adalah:",
         "options": [
             {
@@ -117,39 +159,60 @@
         "id": "konsekuensi_03_bite_registration_miring",
         "type": "consequence",
         "title": "Konsekuensi - Bite Registration dengan Bite Rim Miring",
-        "camera": "sony-a6400",
-        "video": "/videos/k03-bite-registration-miring.mp4",
+        "projection": "flat",
+        "video": "/videos/C0268.MP4",
+        "remote": {
+            "fileId": "1XZwC5W0bWT2ZftzzGbbZaYq70FUjMyLP",
+            "fileName": "konsekuensi salah segmen 5.mp4",
+            "size": 96755409,
+            "md5": "c9e3853599588fe89c82af235a11211c",
+            "version": 1
+        },
         "returnTo": "segmen_05_penetapan_gigit"
     },
     {
         "id": "konsekuensi_03_bite_registration_benar",
         "type": "consequence",
         "title": "Konsekuensi - Bite Registration Benar",
-        "camera": "sony-a6400",
-        "video": "/videos/k03-bite-registration-benar.mp4",
+        "projection": "flat",
+        "video": "/videos/C0268.MP4",
+        "remote": {
+            "fileId": "1ZLAv0WG33KnVE7tUrfU75yzBFaU7KqgS",
+            "fileName": "konsekuensi benar segmen 5.mp4",
+            "size": 111510345,
+            "md5": "58fb90acbbd1ef9f28e266dfdb38bed8",
+            "version": 1
+        },
         "next": "segmen_06_try_in"
     },
     {
         "id": "segmen_06_try_in",
         "type": "linear",
         "title": "Segmen 6 - Pasang Coba Gigi Malam (Try-In)",
-        "camera": "sony-a6400",
-        "video": "/videos/06-try-in.mp4",
+        "projection": "flat",
+        "video": "/videos/C0268.MP4",
+        "remote": {
+            "fileId": "1tWJJ8hMdi_ypk3JNlE9qxrOTxtf2FS4X",
+            "fileName": "segmen 6.mp4",
+            "size": 224781889,
+            "md5": "0c68a8a5eb29fd351a2279fee7512edc",
+            "version": 1
+        },
         "next": "segmen_07_insersi_gtl"
     },
     {
         "id": "segmen_07_insersi_gtl",
         "type": "linear",
         "title": "Segmen 7 - Insersi GTL Final",
-        "camera": "insta360",
-        "video": "/videos/07-insersi-gtl.mp4",
+        "projection": "360",
+        "video": "/videos/01-pembukaan.mp4",
         "next": "selesai"
     },
     {
         "id": "selesai",
         "type": "end",
         "title": "Selesai",
-        "camera": "insta360",
-        "video": "/videos/08-penutup.mp4"
+        "projection": "360",
+        "video": "/videos/01-pembukaan.mp4"
     }
 ]
