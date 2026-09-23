@@ -85,7 +85,7 @@ export async function playActiveVideos() {
 
 /**
  * Clear semua scene yang terpasang: hentikan video dan kosongkan kontainer mount.
- * Juga reset flag visibilitas kuis.
+ * Juga reset flag visibilitas kuis + sembunyikan popup flat mobile.
  */
 export function clearScenes() {
   stopVideos();
@@ -94,7 +94,27 @@ export function clearScenes() {
   const vrLeftMount = document.getElementById('vrLeftMount');
   const vrRightMount = document.getElementById('vrRightMount');
 
-  if (mobileMount) mobileMount.innerHTML = '';
+  if (mobileMount) {
+    mobileMount.innerHTML = '';
+    mobileMount.classList.remove('hidden');
+  }
   if (vrLeftMount) vrLeftMount.innerHTML = '';
   if (vrRightMount) vrRightMount.innerHTML = '';
+
+  document.getElementById('mobileQuizPopup')?.classList.add('hidden');
+  document.getElementById('mobileEndPopup')?.classList.add('hidden');
+  document.getElementById('mobileFlatWrap')?.classList.add('hidden');
+  document.getElementById('mobileRotateHint')?.classList.add('hidden');
+
+  try {
+    if (screen.orientation?.unlock) screen.orientation.unlock();
+  } catch { /* abaikan */ }
+  try {
+    if (document.fullscreenElement) document.exitFullscreen()?.catch?.(() => {});
+  } catch { /* abaikan */ }
+
+  const flatVideo = document.getElementById('mobileFlatVideo');
+  if (flatVideo) {
+    flatVideo.onended = null;
+  }
 }

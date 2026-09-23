@@ -7,8 +7,6 @@ import { B_BUTTON_INDEX, Y_BUTTON_INDEX, store } from './store.js';
 import { setCalibrationEye, setCalibrationValues } from './calibration.js';
 import { triggerSelectFromGaze } from './gaze.js';
 
-/** Masuk ke mode VR (dipakai mode.html via navigation, wrapper khusus VR). */
-
 /**
  * Cari gamepad yang sudah terhubung dan set index pertama yang ditemukan.
  * Dipanggil saat inisialisasi polling jika koneksi belum diketahui.
@@ -46,6 +44,9 @@ function handleCalibrationGamepad(gamepad) {
  * Loop polling untuk membaca state gamepad. Jika tombol ditekan, trigger seleksi dari gaze.
  * Dipanggil sekali untuk memulai loop via requestAnimationFrame.
  */
+// DEBUG sementara: ingat kombinasi terakhir agar log hanya muncul saat berubah.
+let lastPressedKey = '';
+
 export function pollGamepad() {
   requestAnimationFrame(pollGamepad);
 
@@ -59,6 +60,16 @@ export function pollGamepad() {
   if (!gp) {
     store.gamepadIndex = null;
     return;
+  }
+
+  // DEBUG sementara: tampilkan indeks semua tombol yang sedang ditekan.
+  const pressedIndices = gp.buttons
+    .map((b, i) => (b.pressed ? i : null))
+    .filter((i) => i !== null);
+  const pressedKey = pressedIndices.join(',');
+  if (pressedKey !== lastPressedKey) {
+    lastPressedKey = pressedKey;
+    console.log('[VR Remote] tombol ditekan:', pressedIndices.length ? pressedIndices : 'tidak ada');
   }
 
   if (store.activeModule?.type === 'calibration') {
@@ -79,7 +90,8 @@ export function pollGamepad() {
 export function initVrPlayer() {
   window.addEventListener('gamepadconnected', (event) => {
     store.gamepadIndex = event.gamepad.index;
-    console.log('[VR Remote] gamepadconnected', event.gamepad.index, event.gamepad.id);
+    // DEBUG sementara: kenali remote (id/mapping/jumlah tombol).
+    console.log('[VR Remote] gamepadconnected', event.gamepad.index, event.gamepad.id, 'mapping:', event.gamepad.mapping, 'tombol:', event.gamepad.buttons.length);
   });
 
   window.addEventListener('gamepaddisconnected', (event) => {

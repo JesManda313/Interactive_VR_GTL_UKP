@@ -5,6 +5,19 @@
 import { safeText } from './utils.js';
 
 /**
+ * TRUE jika skenario memakai video flat (projection: flat): tampil sebagai
+ * layar datar (fullscreen HP di mobile, layar bioskop di VR), BUKAN videosphere.
+ * Tanpa projection (atau 360) dianggap 360.
+ * Duplikasi logika isFlatScenario() dari scenario.js secara sengaja untuk
+ * menghindari circular import (scenario.js mengimpor modul ini).
+ */
+export function isFlatVideo(scenario) {
+  if (!scenario) return false;
+  const projection = String(scenario.projection ?? scenario.videoType ?? '').toLowerCase();
+  return projection === 'flat' || projection === '2d' || projection === 'rectilinear';
+}
+
+/**
  * Bangun HTML A-Frame untuk daftar opsi kuis.
  * Menghitung posisi, ukuran, dan atribut data untuk tiap opsi.
  */
@@ -69,7 +82,7 @@ export function buildOptionsHtml(options = [], variant = 'mobile') {
  * Bangun HTML A-Frame untuk panel kuis lengkap (pertanyaan + opsi + feedback).
  * Mengembalikan string HTML atau string kosong jika tidak ada pertanyaan.
  */
-export function buildQuizPanelHtml(scenario, variant = 'mobile') {
+export function buildQuizPanelHtml(scenario, variant = 'mobile', quizZ = '-3.1') {
   if (!scenario.question || !Array.isArray(scenario.options)) {
     return '';
   }
@@ -84,7 +97,7 @@ export function buildQuizPanelHtml(scenario, variant = 'mobile') {
     <a-entity
       class="quiz-panel"
       visible="false"
-      position="0 3 -3.1"
+      position="0 3 ${quizZ}"
     >
       <a-plane
         width="${panelWidth}"
@@ -242,7 +255,9 @@ export function buildCalibrationSceneHtml({ eye = 'left' } = {}) {
 
 /**
  * Bangun string HTML A-Frame untuk sebuah scene (mobile atau VR eye).
- * Menyusun aset video, videosphere, kamera, cursor, tombol kembali, dan panel kuis.
+ * Menyusun aset video, tampilan utama (videosphere 360 / layar bioskop flat
+ * untuk Sony di VR / fullscreen HP di mobile), kamera, cursor, tombol
+ * kembali, dan panel kuis.
  */
 export function buildSceneHtml({ mode, eye = 'main', scenario }) {
   const isVr = mode === 'vr';
@@ -252,7 +267,12 @@ export function buildSceneHtml({ mode, eye = 'main', scenario }) {
   const videoId = isVr ? 'sharedVrVideo' : `${mode}-video`;
   const sceneId = `${mode}-${eye}-scene`;
 
-  const quizHtml = buildQuizPanelHtml(scenario, isVr ? 'vr' : 'mobile');
+  // Quiz VR-flat dimajukan ke depan layar bioskop; VR-360 & mobile tidak berubah.
+  const quizHtml = buildQuizPanelHtml(
+    scenario,
+    isVr ? 'vr' : 'mobile',
+    isVr && isFlatVideo(scenario) ? '-2.45' : '-3.1',
+  );
   const worldBackButtonHtml = buildWorldBackButtonHtml();
 
   const cameraControls = isVr
@@ -297,7 +317,58 @@ export function buildSceneHtml({ mode, eye = 'main', scenario }) {
       </a-assets>
     `;
 
-  const mainSceneViewHtml = `
+  // VR + video flat (Sony) = layar bioskop datar 16:9 di ruang gelap.
+  // VR + video 360 (insta360) = videosphere seperti dulu.
+  const isFlat = isFlatVideo(scenario);
+
+  const cinemaScreenHtml = `
+    <a-sky color="#020304"></a-sky>
+    <a-light type="ambient" color="#39424e" intensity="0.7"></a-light>
+
+    <!-- bingkai layar -->
+    <a-plane
+      width="3.7"
+      height="2.15"
+      color="#101418"
+      position="0 2.7 -1.2"
+      material="shader: flat"
+    ></a-plane>
+    <!-- layar video 16:9 -->
+    <a-video
+      src="#${videoId}"
+      width="3.4"
+      height="1.9125"
+      position="0 2.7 -1"
+      material="shader: flat"
+    ></a-video>
+    <!-- garis aksen bawah layar -->
+    <a-plane
+      width="3.7"
+      height="0.045"
+      color="#78b7dc"
+      position="0 0.65 -2.62"
+      material="shader: flat"
+    ></a-plane>
+    <!-- cahaya redup kiri-kanan ala lorong bioskop -->
+    <a-plane
+      width="0.06"
+      height="1.4"
+      color="#1d3a4d"
+      position="-2.6 1.4 -2.2"
+      rotation="0 28 0"
+      material="shader: flat"
+    ></a-plane>
+    <a-plane
+      width="0.06"
+      height="1.4"
+      color="#1d3a4d"
+      position="2.6 1.4 -2.2"
+      rotation="0 -28 0"
+      material="shader: flat"
+    ></a-plane>
+  `;
+
+  const sphereViewHtml = `
     <a-videosphere
       src="#${videoId}"
       rotation="0 -90 0"
@@ -305,6 +376,8 @@ export function buildSceneHtml({ mode, eye = 'main', scenario }) {
       segments-height="16"
     ></a-videosphere>
   `;
+
+  const mainSceneViewHtml = isVr && isFlat ? cinemaScreenHtml : sphereViewHtml;
 
   return `
     <a-scene
