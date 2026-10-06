@@ -27,7 +27,6 @@
     <!-- Hint saat HP masih portrait: ajak putar ke landscape -->
     <div id="mobileRotateHint" class="mobile-rotate-hint hidden">
       <span>🔄 Putar HP ke landscape untuk tampilan penuh</span>
-      <button id="mobileRotateGo" type="button">Paksa landscape</button>
     </div>
 
     <!-- Branching: popup muncul di depan video -->
@@ -48,6 +47,13 @@
         <button id="mobileEndBack" class="btn-primary" type="button">Kembali ke mode</button>
       </div>
     </div>
+  </div>
+
+  <!-- Overlay terjadwal (teks/gambar detik tertentu, semua mode mobile) -->
+  <div id="mobileTimedOverlay" class="mobile-timed-overlay pos-bawah hidden">
+    <button id="mobileTimedClose" class="mobile-timed-close" type="button" aria-label="Tutup">✕</button>
+    <img id="mobileTimedImg" class="mobile-timed-img hidden" alt="" />
+    <p id="mobileTimedText" class="mobile-timed-text"></p>
   </div>
 
   <div id="mobileFadeOverlay" class="fade-overlay">

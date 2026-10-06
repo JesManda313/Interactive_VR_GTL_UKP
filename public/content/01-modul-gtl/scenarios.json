@@ -12,6 +12,20 @@
             "md5": "1341aa4aa286e9fe9d70aa2df887f54d",
             "version": 1
         },
+        "overlays": [
+            { "id": "s1-welcome", "start": 0, "end": 8, "kind": "text", "text": "Selamat Datang\nModul Tahapan Klinis Pembuatan GTL", "size": "judul", "pos": "atas" },
+            { "id": "s1-tahapan", "start": 63, "end": 68, "kind": "text", "text": "6 Tahapan GTL", "size": "besar", "pos": "bawah" },
+            { "id": "s1-img-gtl", "start": 7, "end": 12, "kind": "image", "image": "/images/dummy-overlay.svg", "imageRemote": null, "caption": "Gigi Tiruan Lengkap", "size": "besar", "pos": "bawah" },
+            { "id": "s1-img-edentulous", "start": 17, "end": 20, "kind": "image", "image": "/images/dummy-overlay.svg", "imageRemote": null, "caption": "", "size": "besar", "pos": "bawah" },
+            { "id": "s1-t1", "start": 68, "end": 74, "kind": "text", "text": "1. Cetakan Awal", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
+            { "id": "s1-t2", "start": 77, "end": 83, "kind": "text", "text": "2. Trial Sendok Cetak Individual dan Border Molding", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
+            { "id": "s1-t3", "start": 85, "end": 91, "kind": "text", "text": "3. Final Impression", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
+            { "id": "s1-t4", "start": 92, "end": 101, "kind": "text", "text": "4. Penetapan Gigit dan Bite Registration", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
+            { "id": "s1-t5", "start": 102, "end": 110, "kind": "text", "text": "5. Pasang Coba Gigi Malam", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
+            { "id": "s1-t6", "start": 111, "end": 118, "kind": "text", "text": "6. Insersi GTL Final", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
+            { "id": "s1-kritis", "start": 127, "end": 133, "kind": "text", "text": "3 Titik Kritis & Tentukan Keputusan Klinis", "size": "besar", "pos": "bawah" },
+            { "id": "s1-belajar", "start": 157, "end": 159, "kind": "text", "text": "Selamat Belajar", "size": "besar", "pos": "atas" }
+        ],
         "next": "segmen_02_cetakan_awal"
     },
     {
@@ -35,6 +49,12 @@
                 "correct": true,
                 "consequence": "konsekuensi_01_cetakan_benar"
             }
+        ],
+        "overlays": [
+            { "id": "s2-judul", "start": 0, "end": 8, "kind": "text", "text": "Pencetakan Awal dengan Alginate", "size": "judul", "pos": "atas" },
+            { "id": "s2-siku", "start": 49, "end": 55, "kind": "text", "text": "mulut pasien sejajar dengan siku operator", "size": "besar", "pos": "bawah" },
+            { "id": "s2-putar", "start": 71, "end": 77, "kind": "text", "text": "gerakan memutar menekan ke dinding bowl", "size": "besar", "pos": "bawah" },
+            { "id": "s2-angka8", "start": 78, "end": 84, "kind": "text", "text": "bisa menyerupai angka 8", "size": "besar", "pos": "bawah" }
         ]
     },
     {
@@ -58,6 +78,7 @@
         "type": "linear",
         "title": "Segmen 3 - Trial SCI + Border Molding",
         "projection": "flat",
+        "video": "/videos/C0268.MP4",
         "remote": {
             "fileId": "1vuW8JxLj3hVet9dgsOqBlaD2EF2neVaA",
             "fileName": "segmen 3.mp4",
@@ -65,6 +86,14 @@
             "md5": "0a2e830e3cd35b391f58dce588cca0de",
             "version": 1
         },
+        "overlays": [
+            { "id": "s3-judul", "start": 0, "end": 8, "kind": "text", "text": "Trial Individual Tray + Border Molding", "size": "judul", "pos": "atas" },
+            { "id": "s3-ridge", "start": 8, "end": 11, "kind": "text", "text": "Tidak menekan ridge berlebihan", "size": "besar", "pos": "bawah" },
+            { "id": "s3-stabil", "start": 20, "end": 22, "kind": "text", "text": "Stabil", "size": "besar", "pos": "bawah" },
+            { "id": "s3-mukosa", "start": 27, "end": 30, "kind": "text", "text": "batas mukosa 2 mm di atas mukobukal fold", "size": "besar", "pos": "bawah" },
+            { "id": "s3-regio", "start": 71, "end": 73, "kind": "text", "text": "aplikasikan per regio, jangan sekaligus", "size": "besar", "pos": "bawah" },
+            { "id": "s3-otot", "start": 101, "end": 107, "kind": "text", "text": "Gerakan otot aktif pasien + Gerakan tambahan dari operator", "size": "besar", "pos": "bawah" }
+        ],
         "next": "segmen_04_final_impression"
     },
     {
@@ -109,6 +138,10 @@
             "md5": "540d4e901362d9276db0f3ab6d172555",
             "version": 1
         },
+        "overlays": [
+            { "id": "k2-tarik", "start": 7, "end": 12, "kind": "text", "text": "menarik terlalu cepat bisa menyebabkan distorsi", "size": "besar", "pos": "bawah" },
+            { "id": "k2-gambar", "start": 15, "end": 18, "kind": "image", "image": "/images/dummy-overlay.svg", "imageRemote": null, "caption": "", "size": "besar", "pos": "bawah" }
+        ],
         "returnTo": "segmen_04_final_impression"
     },
     {
@@ -153,6 +186,9 @@
                 "correct": true,
                 "consequence": "konsekuensi_03_bite_registration_benar"
             }
+        ],
+        "overlays": [
+            { "id": "s5-dvr", "start": 80, "end": 83, "kind": "text", "text": "DVR = 60 mm", "size": "besar", "pos": "bawah" }
         ]
     },
     {
@@ -206,6 +242,25 @@
         "title": "Segmen 7 - Insersi GTL Final",
         "projection": "360",
         "video": "/videos/01-pembukaan.mp4",
+        "overlays": [
+            { "id": "s7-judul", "start": 0, "end": 8, "kind": "text", "text": "Insersi Final GTL", "size": "judul", "pos": "atas" },
+            { "id": "s7-seal", "start": 49, "end": 51, "kind": "text", "text": "peripheral seal", "size": "besar", "pos": "bawah" },
+            { "id": "s7-oklusi", "start": 77, "end": 80, "kind": "text", "text": "Evaluasi Oklusi dengan Articulating Paper", "size": "besar", "pos": "bawah" },
+            { "id": "s7-bur", "start": 95, "end": 98, "kind": "text", "text": "Koreksi minimal dengan straight bur", "size": "besar", "pos": "bawah" },
+            { "id": "s7-instruksi", "start": 131, "end": 133, "kind": "text", "text": "Instruksi Pasien", "size": "besar", "pos": "bawah" },
+            { "id": "s7-poin", "start": 145, "end": 146, "kind": "text", "text": "4 Poin", "size": "besar", "pos": "bawah" },
+            { "id": "s7-p1", "start": 150, "end": 152, "kind": "text", "text": "1. Cara insersi dan melepaskan", "size": "besar", "pos": "bawah" },
+            { "id": "s7-p2", "start": 176, "end": 178, "kind": "text", "text": "2. Kebersihan", "size": "besar", "pos": "bawah" },
+            { "id": "s7-sikat", "start": 184, "end": 188, "kind": "text", "text": "Gunakan sikat halus dan sabun cair / pasta non abrasif", "size": "besar", "pos": "bawah" },
+            { "id": "s7-simpan", "start": 203, "end": 206, "kind": "text", "text": "Simpan di wadah berisi air bersih", "size": "besar", "pos": "bawah" },
+            { "id": "s7-p3", "start": 211, "end": 213, "kind": "text", "text": "3. Periode Adaptasi", "size": "besar", "pos": "bawah" },
+            { "id": "s7-p4", "start": 242, "end": 244, "kind": "text", "text": "4. Jadwal Kontrol", "size": "besar", "pos": "bawah" },
+            { "id": "s7-24jam", "start": 247, "end": 248, "kind": "text", "text": "24 jam setelah", "size": "besar", "pos": "bawah" },
+            { "id": "s7-minggu", "start": 254, "end": 257, "kind": "text", "text": "1 minggu", "size": "besar", "pos": "bawah" },
+            { "id": "s7-bulan", "start": 260, "end": 265, "kind": "text", "text": "1 bulan", "size": "besar", "pos": "bawah" },
+            { "id": "s7-6bulan", "start": 267, "end": 269, "kind": "text", "text": "6 bulan", "size": "besar", "pos": "bawah" },
+            { "id": "s7-selamat", "start": 275, "end": null, "kind": "text", "text": "SELAMAT!", "size": "judul", "pos": "atas" }
+        ],
         "next": "selesai"
     },
     {
