@@ -19,20 +19,24 @@
   </div>
 
   <div class="mode-grid">
-    <button id="openVrMode" class="mode-card">
-      <span class="mode-text">
-        <strong>Mode VR</strong>
-        <small>Tampilan kiri-kanan untuk headset Shinecon VR. Pilih jawaban dengan remote.</small>
-      </span>
-      <span class="mode-go">→</span>
-    </button>
+    <div class="path-head">
+      <span class="screen-nav-label">Jalur belajar</span>
+      <button id="restartModule" class="btn-ghost" type="button">Mulai dari awal</button>
+    </div>
+    <p id="pathHint" class="description">Ketuk segmen yang terbuka untuk melanjutkan.</p>
+    <div id="segmentPath" class="segment-path"></div>
+  </div>
 
-    <button id="openMobileMode" class="mode-card">
-      <span class="mode-text">
-        <strong>Mode Mobile</strong>
-        <small>Satu layar penuh. Geser view dengan drag dan pilih jawaban dengan tap.</small>
-      </span>
-      <span class="mode-go">→</span>
-    </button>
+  <!-- Popup pilih mode setelah segmen dipilih -->
+  <div id="modePopup" class="mobile-quiz-popup mode-popup-center hidden">
+    <div class="mobile-quiz-card">
+      <span class="mobile-quiz-eyebrow">Putar dengan</span>
+      <h3 id="modePopupTitle">-</h3>
+      <div class="mobile-quiz-options">
+        <button id="popupVrMode" class="mobile-quiz-option" type="button"><span class="opt-label">VR</span><span>Mode VR — headset + remote</span></button>
+        <button id="popupMobileMode" class="mobile-quiz-option" type="button"><span class="opt-label">HP</span><span>Mode Mobile — layar sentuh</span></button>
+        <button id="popupCancel" class="mobile-quiz-option" type="button"><span class="opt-label">×</span><span>Batal</span></button>
+      </div>
+    </div>
   </div>
 </section>
