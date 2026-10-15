@@ -8,7 +8,7 @@
  * lalu tekan tombol remote -> fungsi triggerSelectFromGaze() mengecek "apa yang sedang
  * ditatap" via raycaster A-Frame, lalu klik secara programatis.
  */
-import { handleOption } from './scenario.js'; // untuk jawab kuis. KENAPA import? Agar klik remote = klik opsi beneran (logika nilai benar/salah tetap di scenario.js).
+import { handleOption, startVrPlayback } from './scenario.js'; // untuk jawab kuis + tombol START VR. KENAPA import? Agar klik remote = aksi beneran (logika tetap di scenario.js).
 import { backToModeSelection, backToModules } from './navigation.js'; // untuk tombol kembali dunia.
 import { store } from './store.js'; // untuk cek apakah sedang di modul kalibrasi.
 
@@ -30,6 +30,7 @@ export function findGazeCursors(root = document) {
  * Mencari elemen yang sedang di-intersect oleh raycaster:
  * - .quiz-option (atau anaknya) -> handleOption (jawab kuis)
  * - .world-back-button (atau anaknya) -> kembali (mode / daftar modul)
+ * - .vr-start-gate (atau anaknya) -> startVrPlayback (mulai video VR)
  *
  * ALUR PER BARIS:
  * 1. Cari semua cursor. Bila tidak ada -> warn + return (tidak ada yang bisa diklik).
@@ -84,6 +85,7 @@ export function triggerSelectFromGaze(event) {
       target
       && !target.classList.contains('quiz-option')
       && !target.classList.contains('world-back-button')
+      && !target.classList.contains('vr-start-gate')
     ) {
       target = target.parentElement;
     }
@@ -103,7 +105,13 @@ export function triggerSelectFromGaze(event) {
       }
       return;
     }
+
+    if (target && target.classList.contains('vr-start-gate')) {
+      console.log('[VR Remote] gerbang START ditemukan, memutar video...');
+      startVrPlayback(); // tutup gate + play (guard mode VR ada di dalamnya).
+      return;
+    }
   }
 
-  console.warn('[VR Remote] Tidak menemukan opsi quiz / tombol kembali di gaze cursor. Pastikan kursor mengarah ke target.');
+  console.warn('[VR Remote] Tidak menemukan opsi quiz / tombol kembali / gerbang START di gaze cursor. Pastikan kursor mengarah ke target.');
 }

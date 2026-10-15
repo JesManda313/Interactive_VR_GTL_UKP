@@ -42,13 +42,17 @@ export function setGamepadIndexFromConnected() {
 //   KENAPA clamp? Agar gambar tidak kabur jauh keluar layar.
 function handleCalibrationGamepad(gamepad) {
   const buttons = gamepad.buttons.map((button) => button.pressed); // ubah jadi array boolean sederhana.
+
+  // ini untuk deteksi tombol yg sblmnya tdk dipencet jd dipencet 
+  // hasil= ture jika tombol baru saja ditekan, false jika tidak.
+  // ini program meriksa remote berkali2 per detik, dgn membandingkan kondisi skrng dan sblmny
+  // ini bergantung pada store.previousCalibrationButtons yg menyimpan kondisi tombol sblmnya.
   const pressedNow = (index) => buttons[index] && !store.previousCalibrationButtons[index];
 
   if (pressedNow(B_BUTTON_INDEX)) setCalibrationEye('left');
   if (pressedNow(Y_BUTTON_INDEX)) setCalibrationEye('right');
 
-  // Confirm remote di mode kalibrasi = kembali ke daftar modul
-  // (sebelumnya confirm tidak dipetakan ke apa pun di mode ini).
+  // Jika tombol confirm ditekan, simpan dulu state tombol agar saat kembali ke modul, status tidak basi.
   if (pressedNow(CONFIRM_BUTTON_INDEX)) {
     store.previousCalibrationButtons = buttons; // simpan dulu KENAPA? Agar saat kembali, status tidak basi.
     backToModules();

@@ -26,6 +26,7 @@ function loadCalibration() {
 
 // scheduleCalibrationSave(): Untuk apa? Jadwalkan simpan 400ms ke depan, abaikan panggilan ganda.
 // KENAPA debounce? Slider mengirim puluhan event per detik; tanpa ini localStorage ditulis terus-menerus (lambat di HP).
+// ini sistem auto save nya 
 function scheduleCalibrationSave() {
   if (calibrationSaveTimer) return; // sudah dijadwalkan -> jangan dobel. KENAPA? Hemat timer.
 

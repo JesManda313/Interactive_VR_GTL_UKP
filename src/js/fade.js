@@ -19,6 +19,12 @@
  */
 export function getFadeOverlay(mode) {
   if (mode === 'mobile') {
+    // Dua overlay: #mobileFadeOverlay (360, di luar wrap) + #mobileFlatFadeOverlay
+    // (flat, di dalam wrap agar terlihat saat fullscreen landscape).
+    // Kembalikan array agar fade tampil di konteks yang sedang aktif;
+    // yang hidden (display:none) otomatis tidak terlihat.
+    const all = [...document.querySelectorAll('.mobile-fade-overlay')];
+    if (all.length) return all;
     return document.getElementById('mobileFadeOverlay');
   }
 
