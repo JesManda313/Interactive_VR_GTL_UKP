@@ -20,6 +20,7 @@ import {
   setFadeMessage,
 } from './fade.js';
 import { buildSceneHtml, listOverlayImages } from './scene-builders.js';
+import { ScreenOrientation } from '@capacitor/screen-orientation';
 
 // Handler navigasi (backToModules / backToModeSelection) didaftarkan oleh
 // navigation.js via setNavHandlers — agar modul ini tidak import navigation
@@ -67,6 +68,26 @@ export function isFlatScenario(scenario) {
   return projection === 'flat' || projection === '2d' || projection === 'rectilinear';
 }
 
+/** Sembunyikan gerbang START VR di kedua mata (dipakai saat kuis langsung tampil). */
+// hideVrStartGate: UNTUK APA? Set visible=false semua .vr-start-gate tanpa memutar video.
+// KENAPA? Dipakai saat kembali dari konsekuensi (kuis langsung tampil, video sudah habis).
+function hideVrStartGate() {
+  document.querySelectorAll('.vr-start-gate').forEach((el) => {
+    try {
+      el.setAttribute('visible', 'false');
+    } catch { /* abaikan */ }
+  });
+}
+
+/** START VR ditekan (tatap + tombol remote / klik): tutup gerbang, putar video. */
+// startVrPlayback: UNTUK APA? Satu pintu mulai-putar VR: sembunyikan gate lalu play.
+// KENAPA? Dipanggil gaze.js (remote) + klik mouse (uji laptop) agar perilaku identik.
+export function startVrPlayback() {
+  if (store.activeMode !== 'vr') return;
+  hideVrStartGate();
+  playActiveVideos();
+}
+
 /** Sembunyikan popup HTML mobile (quiz + end). */
 // hideMobilePopups: UNTUK APA? Menutup popup kuis/akhir mobile tiap ganti segmen.
 // KENAPA? Agar popup segmen lama tidak bocor menutupi video segmen baru.
@@ -98,52 +119,49 @@ function updateRotateHintVisibility() {
   hint.classList.toggle('hidden', !(flatActive && isPortraitNow()));
 }
 
-/** Coba kunci ke landscape (tanpa fullscreen; gagal diam-diam kalau belum ada gesture). */
-// tryFlatLandscape: UNTUK APA? Percobaan auto-lock landscape tiap masuk segmen flat.
-// KENAPA? Browser butuh gesture user; gagal diam-diam lalu hint + tombol jadi fallback (tidak crash).
-async function tryFlatLandscape() {
-  updateRotateHintVisibility();
+/** Coba kunci ke landscape via plugin native (APK) dulu, fallback Web API (browser).
+ * Dipakai flat (Sony) + VR (split kiri-kanan butuh landscape). */
+export async function lockLandscape() {
+  try {
+    await ScreenOrientation.lock({ orientation: 'landscape' });
+    return 'native';
+  } catch { /* bukan APK / ditolak — lanjut fallback */ }
   try {
     if (screen.orientation?.lock) {
       await screen.orientation.lock('landscape');
+      return 'web';
     }
-  } catch {
-    // Abaikan: browser butuh gesture user dulu. Hint + tombol ⛶ jadi fallback.
-  }
+  } catch { /* butuh gesture / tidak didukung */ }
+  return 'gagal';
+}
+
+/** Buka kunci orientasi (native + web), abaikan bila tidak didukung. */
+export async function unlockOrientation() {
+  try {
+    await ScreenOrientation.unlock();
+  } catch { /* abaikan */ }
+  try {
+    if (screen.orientation?.unlock) screen.orientation.unlock();
+  } catch { /* abaikan */ }
+}
+
+/** Coba kunci ke landscape (tanpa fullscreen; gagal diam-diam kalau belum ada gesture). */
+// tryFlatLandscape: UNTUK APA? Percobaan auto-lock landscape tiap masuk segmen flat.
+// KENAPA? Browser butuh gesture user; gagal diam-diam lalu hint putar-HP jadi fallback (tidak crash).
+async function tryFlatLandscape() {
+  updateRotateHintVisibility();
+  await lockLandscape();
   updateRotateHintVisibility();
 }
 
-/** Dipanggil dari tombol (ada gesture): fullscreen + kunci landscape. */
-// forceFlatLandscape: UNTUK APA? Fullscreen + lock landscape setelah user menekan tombol rotate.
-// KENAPA? Gesture tombol memenuhi syarat browser sehingga lock hampir pasti berhasil (fallback putar manual).
-async function forceFlatLandscape() {
-  const wrap = document.getElementById('mobileFlatWrap');
-  try {
-    if (wrap?.requestFullscreen && !document.fullscreenElement) {
-      await wrap.requestFullscreen();
-    } else if (wrap?.webkitRequestFullscreen && !document.webkitFullscreenElement) {
-      wrap.webkitRequestFullscreen();
-    }
-  } catch {
-    // Fullscreen ditolak — lanjut ke orientation lock saja.
-  }
-  try {
-    if (screen.orientation?.lock) {
-      await screen.orientation.lock('landscape');
-    }
-  } catch {
-    // Abaikan: user tinggal putar HP manual.
-  }
-  updateRotateHintVisibility();
-}
+/** Tombol ⛶ dihapus: lock landscape hanya otomatis saat masuk segmen (butuh
+ * gesture, boleh gagal diam-diam); user memutar HP manual via auto-rotate. */
 
 /** Keluar dari landscape: unlock + keluar fullscreen. */
 // exitFlatLandscape: UNTUK APA? Bersihkan lock orientasi + fullscreen + hint saat pindah ke 360/VR.
 // KENAPA? Tanpa cleanup, HP terkunci landscape dan hint nyangkut di scene yang tidak butuh.
 function exitFlatLandscape() {
-  try {
-    if (screen.orientation?.unlock) screen.orientation.unlock();
-  } catch { /* abaikan */ }
+  unlockOrientation();
   try {
     if (document.fullscreenElement) document.exitFullscreen()?.catch?.(() => {});
     else if (document.webkitFullscreenElement) document.webkitExitFullscreen?.();
@@ -159,6 +177,9 @@ if (typeof window !== 'undefined') {
     updateRotateHintVisibility();
   });
   document.addEventListener('fullscreenchange', () => {
+    updateRotateHintVisibility();
+  });
+  document.addEventListener('webkitfullscreenchange', () => {
     updateRotateHintVisibility();
   });
 }
@@ -211,6 +232,7 @@ function renderMobileQuizPopup(scenario) {
  *     manual meter; x,y null = otomatis berdampingan; w null = default),
  *   pos3d: [x, y, z] opsional (posisi bebas entity, video 360 mobile + VR),
  *   textX/textY opsional (offset teks lokal entity, video 360 mobile + VR),
+ *   rot: [x, y, z] derajat opsional (putaran teks + kotaknya, video 360),
  *   \n manual di text/caption untuk pecah baris (maks 2 baris disarankan),
  *   size: 'normal'|'besar'|'judul', pos: 'bawah'|'atas' }].
  * Mobile-flat: kartu DOM transparan (#mobileTimedOverlay + #mobileTimedImgs).
@@ -496,12 +518,6 @@ function renderMobileFlatScenario(scenario) {
     };
   }
 
-  // Tombol landscape topbar + hint (assign ulang agar tidak dobel listener).
-  const rotateButton = document.getElementById('mobileFlatRotate');
-  if (rotateButton) {
-    rotateButton.onclick = () => forceFlatLandscape();
-  }
-
   // Otomatis coba landscape setiap masuk segmen flat Sony.
   tryFlatLandscape();
 }
@@ -554,6 +570,14 @@ export function bindSceneEvents(root) {
       }
 
       navHandlers?.backToModeSelection?.();
+    });
+  });
+
+  // Gerbang START VR: klik mouse/touch sebagai fallback uji laptop
+  // (di HP VR pemicunya tatap + tombol remote via gaze.js).
+  root.querySelectorAll('.vr-start-gate').forEach((gate) => {
+    gate.addEventListener('click', () => {
+      startVrPlayback();
     });
   });
 }
@@ -820,6 +844,14 @@ export async function renderActiveScenario() {
     const sharedVideo = ensureSharedVrVideo(scenario);
     sharedVideo.onended = handleVideoEnded;
 
+    // Gerbang START: tiap segmen VR di-pause di awal (waktu pasang HP ke
+    // kacamata). Kecuali kembali dari konsekuensi (shouldShowQuizImmediately):
+    // kuis langsung tampil, gate disembunyikan.
+    const showGate = !store.shouldShowQuizImmediately;
+    try {
+      sharedVideo.pause();
+    } catch { /* abaikan */ }
+
     // Tampilan kiri dan kanan.
     vrLeftMount.innerHTML = buildSceneHtml({
       mode: 'vr',
@@ -835,7 +867,10 @@ export async function renderActiveScenario() {
 
     bindSceneEvents(vrLeftMount);
     bindSceneEvents(vrRightMount);
+    if (!showGate) hideVrStartGate();
     applyCalibrationTarget('vr');
+    // Layar split kiri-kanan butuh landscape: kunci otomatis (gagal diam-diam di browser).
+    lockLandscape();
   }
 
   if (store.activeMode === 'mobile') {
@@ -855,7 +890,8 @@ export async function renderActiveScenario() {
       showQuiz();
       store.shouldShowQuizImmediately = false;
     }, 500);
-  } else {
+  } else if (store.activeMode !== 'vr') {
+    // Mobile (flat/360) auto-play; VR menunggu tombol START di environment.
     setTimeout(playActiveVideos, 400);
   }
 

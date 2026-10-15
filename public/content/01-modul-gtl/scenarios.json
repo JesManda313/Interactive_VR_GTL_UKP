@@ -4,27 +4,139 @@
         "type": "linear",
         "title": "Segmen 1 - Pembukaan Dosen Pembimbing",
         "projection": "360",
-        "video": "/videos/01-pembukaan.mp4",
         "remote": {
-            "fileId": "17qyfI0l-o-Lh87Tl7G4_46I9j9F5TDR5",
-            "fileName": "segmen 1.mp4",
-            "size": 219775521,
-            "md5": "1341aa4aa286e9fe9d70aa2df887f54d",
+            "fileId": "1S0-60w0ljyuNvS_reGtzSQxFEjSUNrAZ",
+            "fileName": "segmen 1 final.mp4",
+            "size": 220007835,
+            "md5": "82d2da9747bc29fb3b86f9b9a9c81ddd",
             "version": 1
         },
         "overlays": [
-            { "id": "s1-welcome", "start": 0, "end": 8, "kind": "text", "text": "Selamat Datang\nModul Tahapan Klinis Pembuatan GTL", "size": "judul", "pos": "atas" },
-            { "id": "s1-tahapan", "start": 63, "end": 68, "kind": "text", "text": "6 Tahapan GTL", "size": "besar", "pos": "bawah" },
-            { "id": "s1-img-gtl", "start": 7, "end": 12, "kind": "image", "image": "/images/dummy-overlay.svg", "imageRemote": null, "caption": "Gigi Tiruan Lengkap", "size": "besar", "pos": "bawah" },
-            { "id": "s1-img-edentulous", "start": 17, "end": 20, "kind": "image", "image": "/images/dummy-overlay.svg", "imageRemote": null, "caption": "", "size": "besar", "pos": "bawah" },
-            { "id": "s1-t1", "start": 68, "end": 74, "kind": "text", "text": "1. Cetakan Awal", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
-            { "id": "s1-t2", "start": 77, "end": 83, "kind": "text", "text": "2. Trial Sendok Cetak Individual dan Border Molding", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
-            { "id": "s1-t3", "start": 85, "end": 91, "kind": "text", "text": "3. Final Impression", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
-            { "id": "s1-t4", "start": 92, "end": 101, "kind": "text", "text": "4. Penetapan Gigit dan Bite Registration", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
-            { "id": "s1-t5", "start": 102, "end": 110, "kind": "text", "text": "5. Pasang Coba Gigi Malam", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
-            { "id": "s1-t6", "start": 111, "end": 118, "kind": "text", "text": "6. Insersi GTL Final", "image": "/images/dummy-overlay.svg", "imageRemote": null, "size": "besar", "pos": "bawah" },
-            { "id": "s1-kritis", "start": 127, "end": 133, "kind": "text", "text": "3 Titik Kritis & Tentukan Keputusan Klinis", "size": "besar", "pos": "bawah" },
-            { "id": "s1-belajar", "start": 157, "end": 159, "kind": "text", "text": "Selamat Belajar", "size": "besar", "pos": "atas" }
+            {"id": "s1-welcome", "start": 0, "end": 8, "kind": "text", "text": "Selamat Datang\nModul Tahapan Klinis\nPembuatan Gigi Tiruan Lengkap", "size": "judul", "pos": "atas"},
+            {"id": "s1-tahapan", "start": 63, "end": 68, "kind": "text", "text": "6 Tahapan Pembuatan Gigi Tiruan Lengkap", "size": "besar", "pos": "bawah"},
+            {
+                "id": "s1-gtl",
+                "start": 7,
+                "end": 12,
+                "kind": "text", 
+                "text": "Gigi Tiruan Lengkap",
+                "images": [
+                    {
+                        "imageRemote": {
+                            "fileId": "1-jppJwfVv2V_-JmJsUkomCJCBT_nmL6y",
+                            "fileName": "Gigi Tiruan Lengkap.jpeg",
+                            "size": 17300,
+                            "md5": "a122f7dcba1fed9e13f16cdc41e8c838",
+                            "version": 1
+                        },
+                        "x": -1.4,
+                        "y": 3.2,
+                        "w": null
+                    },
+                    {
+                        "imageRemote": {
+                            "fileId": "1tHD5Db5wLD3_-mqDhzCDDN0LMhoS65Uf",
+                            "fileName": "Gigi Tiruan Lengkap 2.jpeg",
+                            "size": 76447,
+                            "md5": "287ca10be2aaa339e3b13261daaafed1",
+                            "version": 1
+                        },
+                        "x": 1.4,
+                        "y": 3.2,
+                        "w": null
+                    }
+                ],
+                "size": "besar",
+                "pos": "bawah"
+            },
+            {
+                "id": "s1-img-edentulous",
+                "start": 17,
+                "end": 20,
+                "kind": "image",
+                "images": [
+                    {
+                        "imageRemote": {
+                            "fileId": "1-NFplvByj6flo2nnaXB7lXO31K7J7teG",
+                            "fileName": "Orang tidak bergigi.jpeg",
+                            "size": 99745,
+                            "md5": "092c92b372dab486abd16f782e22d223",
+                            "version": 1
+                        },
+                        "x": -1.4,
+                        "y": 3.2,
+                        "w": null
+                    }
+                ],
+                "caption": "",
+                "size": "besar",
+                "pos": "bawah"
+            },
+            {
+                "id": "s1-t1",
+                "start": 68,
+                "end": 74,
+                "kind": "text",
+                "images": [
+                    {
+                        "imageRemote": {
+                            "fileId": "1kw4ze9tO2UhUZKnIcDAOK-8nS0lSDDp3",
+                            "fileName": "Cetakan Awal.jpeg",
+                            "size": 13961,
+                            "md5": "4401aa62447e2db138d8bd9d107a1f68",
+                            "version": 1
+                        },
+                        "x": -1.4,
+                        "y": 3.2,
+                        "w": null
+                    }
+                ],
+                "text": "1. Pembuatan Cetakan Awal",
+                "size": "besar",
+                "pos": "bawah"
+            },
+            {
+                "id": "s1-t2", 
+                "start": 77, 
+                "end": 83, 
+                "kind": "text", 
+                "text": "2. Pasang Coba Sendok Cetak\n*Individual* dan *Border Molding*", 
+                "images": [
+                    {
+                        "imageRemote": 
+                            {
+                                "fileId": "11Ik2ms5z-VLHXAoKseNs-3VP3FyUvH9s", 
+                                "fileName": "Border Moulding.jpeg", 
+                                "size": 303366, 
+                                "md5": "d203d4960759ffbe877d033606927519", 
+                                "version": 1
+                            }, 
+                        "x": -1.4,
+                        "y": 3.2,
+                        "w": null
+                        }, 
+                        {
+                            "imageRemote": 
+                            {
+                                "fileId": "1wZE9RscNdV8NhBohUKsqYJiDL4UfcrgA", 
+                                "fileName": "Trial Sendok Cetak.jpeg", 
+                                "size": 86577, 
+                                "md5": "9d3a0ee60c9d5554f28e9e8bc952ca18", 
+                                "version": 1
+                            }, 
+                            "x": 1.4,
+                            "y": 3.2,
+                            "w": null
+                        }], 
+                        "size": "besar", 
+                        "pos": "bawah"
+                    },
+            {"id": "s1-t3", "start": 85, "end": 91, "kind": "text", "images": [{"imageRemote": {"fileId": "1RoONy_FM3TGC3ML6lIVT_fWBvkvh_C88", "fileName": "Final Impression.jpeg", "size": 94025, "md5": "951a09de83dab02d0d106d2fb80ad045", "version": 1}, "x": -1.4,"y": 3.2,"w": null}], "text": "3. Pembuatan *Final Impression*", "size": "besar", "pos": "bawah"},
+            {"id": "s1-t4", "start": 92, "end": 101, "kind": "text", "images": [{"imageRemote": {"fileId": "1lyG4sIalHK6OmLHE_14g--cJMdR6rQ8E", "fileName": "Penetapan gigit & bite registration.jpeg", "size": 116067, "md5": "8179aacbdea20eeef5e0852da66660d0", "version": 1}, "x": -1.4,"y": 3.2,"w": null}], "text": "4. Penetapan Gigit dan\nFiksasi Galangan Gigit", "size": "besar", "pos": "bawah"},
+            {"id": "s1-t5", "start": 102, "end": 110, "kind": "text", "images": [{"imageRemote": {"fileId": "1aYNi_ihBk9NPyVlSYQ_jzcI2I-C-UMys", "fileName": "Pasang coba gigi malam.jpeg", "size": 83946, "md5": "4e4c55deb979767d700caa3e2ef12428", "version": 1},"x": -1.4,"y": 3.2,"w": null}], "text": "5. Pasang Coba Gigi Tiruan\nLengkap Malam", "size": "besar", "pos": "bawah"},
+            {"id": "s1-t6", "start": 111, "end": 118, "kind": "text", "images": [{"imageRemote": {"fileId": "1XwEFwSAlYrNfeIKFVlvN1EsnF8uJ4ye2", "fileName": "Insersi GTL final.jpeg", "size": 84360, "md5": "b6941a21ec80c781de1e455996043edb", "version": 1}, "x": -1.4,"y": 3.2,"w": null}], "text": "6. Insersi Gigi Tiruan Lengkap", "size": "besar", "pos": "bawah"},
+            {"id": "s1-kritis", "start": 127, "end": 133, "kind": "text", "text": "3 Titik Kritis\n& Tentukan Keputusan Klinis", "size": "besar", "pos": "bawah"},
+            {"id": "s1-belajar", "start": 154, "end": 158, "kind": "text", "text": "Selamat Belajar", "size": "besar", "pos": "atas"}
         ],
         "next": "segmen_02_cetakan_awal"
     },
@@ -33,44 +145,64 @@
         "type": "decision",
         "title": "Segmen 2 - Cetakan Awal (Preliminary Impression)",
         "projection": "360",
-        "video": "/videos/01-pembukaan.mp4",
-        "question": "Cetakan alginate rahang atas sudah diinsersikan. Pasien terlihat tidak nyaman. Tindakan apa yang tepat?",
+        "remote": {
+            "fileId": "19_zhCONGIlvPPbVXqrVpjUD7JkNdQNhh",
+            "fileName": "segmen 2 .mp4",
+            "size": 198603540,
+            "md5": "c5c39fb7868970c07b82c1c4d9aaff6e",
+            "version": 1
+        },
+        "question": "Cetakan alginate rahang atas sudah diinsersikan. Pasien terlihat tidak nyaman. Tindakan apa yang tepat untuk dilakukan?",
         "options": [
             {
                 "label": "A",
                 "text": "Langsung lepaskan sendok cetak karena pasien tidak nyaman — cetakan bisa diulang.",
                 "correct": false,
                 "consequence": "konsekuensi_01_cetakan_dilepas_prematur"
-
             },
             {
                 "label": "B",
-                "text": "Tenangkan pasien, minta bernapas melalui hidung, pertahankan stabilisasi bilateral hingga alginate fully set (2–3 menit).",
+                "text": "Tenangkan pasien, minta bernapas melalui hidung, pertahankan stabilisasi bilateral hingga alginate fully set (2—3 menit).",
                 "correct": true,
-                "consequence": "konsekuensi_01_cetakan_benar"
+                "consequence": "konsekuensi_01_cetakan_awal"
             }
         ],
         "overlays": [
-            { "id": "s2-judul", "start": 0, "end": 8, "kind": "text", "text": "Pencetakan Awal dengan Alginate", "size": "judul", "pos": "atas" },
-            { "id": "s2-siku", "start": 49, "end": 55, "kind": "text", "text": "mulut pasien sejajar dengan siku operator", "size": "besar", "pos": "bawah" },
-            { "id": "s2-putar", "start": 71, "end": 77, "kind": "text", "text": "gerakan memutar menekan ke dinding bowl", "size": "besar", "pos": "bawah" },
-            { "id": "s2-angka8", "start": 78, "end": 84, "kind": "text", "text": "bisa menyerupai angka 8", "size": "besar", "pos": "bawah" }
+            {"id": "s2-judul", "start": 0, "end": 8, "kind": "text", "text": "1. Pembuatan Cetakan Awal\ndengan *Alginate*", "size": "judul", "pos3d": [0,4.5,-3]},
+            {"id": "s2-pilih", "start": 9, "end": 12, "kind": "text", "text": "Pemilihan Sendok Cetak", "size": "besar", "pos3d": [0,2,-3]},
+            {"id": "s2-pasang", "start": 17, "end": 23, "kind": "text", "text": "Pasang Coba Sendok Cetak", "size": "besar", "pos3d": [5,1.6,-2.5], "rot": [-30, -45, 0]},
+            {"id": "s2-siku", "start": 44, "end": 50, "kind": "text", "text": "Posisikan Ketinggian Mulut Pasien\nSejajar dengan Siku Operator", "size": "besar", "pos3d": [3,-1.5,-3], "rot": [-30, -45, 0]},
+            {"id": "s2-putar", "start": 64, "end": 69, "kind": "text", "text": "Manipulasi *Alginate* dengan Gerakan\nMemutar dan Menekan ke Dinding *Bowl*", "size": "besar", "pos3d": [0,1.3,-4]},
+            {"id": "s2-angka8", "start": 78, "end": 84, "kind": "text", "text": "Gerakan Menyerupai Angka 8/ *Figure of 8*", "size": "besar", "pos3d": [0,1,-4] },
+            {"id": "s2-masukkan", "start": 112, "end": 120, "kind": "text", "text": "Masukkan Sendok Cetak Berisi *Alginate*\nke dalam Mulut Pasien", "size": "besar", "pos3d": [5,-2,-3], "rot": [-30, -45, 0]}
         ]
     },
     {
         "id": "konsekuensi_01_cetakan_dilepas_prematur",
         "type": "consequence",
-        "title": "Konsekuensi - Cetakan Dilepas Prematur",
+        "title": "Konsekuensi - cetakan dilepas prematur",
         "projection": "360",
-        "video": "/videos/01-pembukaan.mp4",
+        "remote": {
+            "fileId": "1P8R9FCIuMb8ULRVc0tD5I0_CHRvOPT6y",
+            "fileName": "segmen 2 konsekuensi salah.mp4",
+            "size": 37252809,
+            "md5": "05cc8c3a6191376b3ef8d9bdf6e075c2",
+            "version": 3
+        },
         "returnTo": "segmen_02_cetakan_awal"
     },
     {
-        "id": "konsekuensi_01_cetakan_benar",
+        "id": "konsekuensi_01_cetakan_awal",
         "type": "consequence",
-        "title": "Konsekuensi - Cetakan Awal Benar",
+        "title": "Konsekuensi - cetakan awal",
         "projection": "360",
-        "video": "/videos/01-pembukaan.mp4",
+        "remote": {
+            "fileId": "1NrSwPwkC9LsR8yrf_nZ2L9W2xSB0k5JE",
+            "fileName": "segmen 2 konsekuensi benar.mp4",
+            "size": 30253053,
+            "md5": "3f221ae28c949ebe2abb0331d6dd4910",
+            "version": 1
+        },
         "next": "segmen_03_trial_sci_border_molding"
     },
     {
@@ -78,21 +210,20 @@
         "type": "linear",
         "title": "Segmen 3 - Trial SCI + Border Molding",
         "projection": "flat",
-        "video": "/videos/C0268.MP4",
         "remote": {
-            "fileId": "1vuW8JxLj3hVet9dgsOqBlaD2EF2neVaA",
+            "fileId": "1aYt8-45cMyKup6bg30wcdsYW2KtxGkp0",
             "fileName": "segmen 3.mp4",
-            "size": 115935722,
-            "md5": "0a2e830e3cd35b391f58dce588cca0de",
+            "size": 176458256,
+            "md5": "5eecda5785d7dc8111591787a124d894",
             "version": 1
         },
         "overlays": [
-            { "id": "s3-judul", "start": 0, "end": 8, "kind": "text", "text": "Trial Individual Tray + Border Molding", "size": "judul", "pos": "atas" },
-            { "id": "s3-ridge", "start": 8, "end": 11, "kind": "text", "text": "Tidak menekan ridge berlebihan", "size": "besar", "pos": "bawah" },
-            { "id": "s3-stabil", "start": 20, "end": 22, "kind": "text", "text": "Stabil", "size": "besar", "pos": "bawah" },
-            { "id": "s3-mukosa", "start": 27, "end": 30, "kind": "text", "text": "batas mukosa 2 mm di atas mukobukal fold", "size": "besar", "pos": "bawah" },
-            { "id": "s3-regio", "start": 71, "end": 73, "kind": "text", "text": "aplikasikan per regio, jangan sekaligus", "size": "besar", "pos": "bawah" },
-            { "id": "s3-otot", "start": 101, "end": 107, "kind": "text", "text": "Gerakan otot aktif pasien + Gerakan tambahan dari operator", "size": "besar", "pos": "bawah" }
+            {"id": "s3-judul", "start": 0, "end": 8, "kind": "text", "text": "2. Pasang Coba Sendok Cetak\n*Individual* dan *Border Molding*", "size": "judul", "pos": "atas"},
+            {"id": "s3-ridge", "start": 12, "end": 18, "kind": "text", "text": "Pastikan Sendok Cetak\nTidak Menekan *Ridge*", "size": "besar", "pos": "bawah"},
+            {"id": "s3-stabil", "start": 20, "end": 25, "kind": "text", "text": "Pastikan Sendok Cetak Stabil", "size": "besar", "pos": "bawah"},
+            {"id": "s3-mukosa", "start": 27, "end": 33, "kind": "text", "text": "Pastikan Ada Jarak 2mm\nAntara Sendok Cetak\ndan *Mucobuccal Fold*", "size": "besar", "pos": "bawah"},
+            {"id": "s3-regio", "start": 60, "end": 70, "kind": "text", "text": "Aplikasikan *Compound* per Regio", "size": "besar", "pos": "bawah"},
+            {"id": "s3-otot", "start": 101, "end": 107, "kind": "text", "text": "Lakukan Gerakan Otot Aktif\noleh Pasien dan Pasif oleh Operator", "size": "besar", "pos": "bawah"}
         ],
         "next": "segmen_04_final_impression"
     },
@@ -101,15 +232,14 @@
         "type": "decision",
         "title": "Segmen 4 - Final Impression",
         "projection": "flat",
-        "video": "/videos/C0268.MP4",
         "remote": {
-            "fileId": "1SbpNPzl86vu6Y2wBcToM2YgiHfphHYuA",
+            "fileId": "13V0W9TLEPZ2Zn2l8th494YlBYw10Eyr7",
             "fileName": "segmen 4.mp4",
             "size": 141339737,
             "md5": "dc5100df322d2109a94425859fc46b97",
             "version": 1
         },
-        "question": "Ditemukan void di palatum anterior dan tray show-through di palatum tengah. Tindakan apa yang paling tepat?",
+        "question": "Ditemukan void di palatum anterior dan tray show-through di palatum tengah. Tindakan apa yang paling tepat untuk dilakukan?",
         "options": [
             {
                 "label": "A",
@@ -121,42 +251,78 @@
                 "label": "B",
                 "text": "Buang cetakan dan ulangi seluruh final impression dari awal.",
                 "correct": true,
-                "consequence": "konsekuensi_02_final_impression_benar"
+                "consequence": "konsekuensi_02_final_impression"
             }
+        ],
+        "overlays": [
+            {"id": "s4-judul", "start": 0, "end": 5, "kind": "text", "text": "3. Pembuatan *Final Impression*", "size": "judul", "pos": "atas"},
+            {"id": "s4-adhesive", "start": 8, "end": 15, "kind": "text", "text": "Aplikasikan *Tray Adhesive*\npada Sendok Cetak *Individual*", "size": "besar", "pos": "bawah"},
+            {"id": "s4-kering", "start": 28, "end": 32, "kind": "text", "text": "Biarkan Kering selama 5 menit", "size": "besar", "pos": "bawah"},
+            {"id": "s4-mixing", "start": 40, "end": 48, "kind": "text", "text": "Aplikasikan *PVS* dengan *Mixing Gun*", "size": "besar", "pos": "bawah"},
+            {"id": "s4-bilateral", "start": 71, "end": 76, "kind": "text", "text": "Masukkan Sendok Cetak *Individual*\ndengan Tekanan *Bilateral* Merata", "size": "besar", "pos": "bawah"},
+            {"id": "s4-setting", "start": 88, "end": 92, "kind": "text", "text": "Pertahankan Sendok Cetak\nsesuai Petunjuk *Setting* Pabrik", "size": "besar", "pos": "bawah"},
+            {"id": "s4-fungsional", "start": 103, "end": 108, "kind": "text", "text": "Dapat Dilakukan Gerakan\nOtot Aktif Pasif", "size": "besar", "pos": "bawah"},
+            {"id": "s4-void", "start": 141, "end": 144, "kind": "text", "text": "Terdapat *Void* di Area Palatum", "size": "besar", "pos": "bawah"}
         ]
     },
     {
         "id": "konsekuensi_02_final_impression_ditambah_pvs",
         "type": "consequence",
-        "title": "Konsekuensi - PVS Ditambahkan pada Cetakan Lama",
+        "title": "Konsekuensi - PVS ditambahkan pada cetakan lama",
         "projection": "flat",
-        "video": "/videos/C0268.MP4",
         "remote": {
-            "fileId": "1-KegS3qgJaaQqazR2buXK46tqwXgU-HP",
+            "fileId": "1PnxA0_sqcmj4YtpJyxGAzJJVuaglk_vC",
             "fileName": "konsekuensi salah segmen 4.mp4",
             "size": 52466373,
             "md5": "540d4e901362d9276db0f3ab6d172555",
             "version": 1
         },
         "overlays": [
-            { "id": "k2-tarik", "start": 7, "end": 12, "kind": "text", "text": "menarik terlalu cepat bisa menyebabkan distorsi", "size": "besar", "pos": "bawah" },
-            { "id": "k2-gambar", "start": 15, "end": 18, "kind": "image", "image": "/images/dummy-overlay.svg", "imageRemote": null, "caption": "", "size": "besar", "pos": "bawah" }
+            {
+                "id": "k2-gambar",
+                "start": 15,
+                "end": 18,
+                "kind": "image",
+                "images": [
+                    {
+                        "imageRemote": {
+                            "fileId": "1kw4ze9tO2UhUZKnIcDAOK-8nS0lSDDp3",
+                            "fileName": "Cetakan Awal.jpeg",
+                            "size": 13961,
+                            "md5": "4401aa62447e2db138d8bd9d107a1f68",
+                            "version": 1
+                        },
+                        "x": null,
+                        "y": null,
+                        "w": null
+                    }
+                ],
+                "caption": "",
+                "size": "besar",
+                "pos": "bawah"
+            },
+            {"id": "k2-tambah", "start": 10, "end": 13, "kind": "text", "text": "Tambahkan *PVS* ke daerah yang *void*", "size": "besar", "pos": "bawah"},
+            {"id": "k2-step", "start": 35, "end": 38, "kind": "text", "text": "Tampak bentukan *step* antara *PVS*\nyang lama dan *PVS* yang baru", "size": "besar", "pos": "bawah"},
+            {"id": "k2-risiko", "start": 51, "end": 53, "kind": "text", "text": "Cetakan ini berisiko mengurangi akurasi\ndari pembuatan gigi tiruan", "size": "besar", "pos": "bawah"}
         ],
         "returnTo": "segmen_04_final_impression"
     },
     {
-        "id": "konsekuensi_02_final_impression_benar",
+        "id": "konsekuensi_02_final_impression",
         "type": "consequence",
-        "title": "Konsekuensi - Final Impression Diulang dengan Benar",
+        "title": "Konsekuensi - final impression diulang",
         "projection": "flat",
-        "video": "/videos/C0268.MP4",
         "remote": {
-            "fileId": "19kpE200YtZqw2FYz_HcgBAIUdzg_79NR",
+            "fileId": "1IXJSnrnWz6HJweSrtBg7Vao6KPxxkGP5",
             "fileName": "konsekuensi benar segmen 4.mp4",
             "size": 51100436,
             "md5": "10cff82829bdeaff0c54bd7f4d8839df",
             "version": 1
         },
+        "overlays": [
+            {"id": "k2b-ulangi", "start": 5, "end": 10, "kind": "text", "text": "Ulangi seluruh tahapan dari awal", "size": "besar", "pos": "bawah"},
+            {"id": "k2b-valid", "start": 28, "end": 35, "kind": "text", "text": "*Final impression* yang valid\nmencetak detail seluruh rahang", "size": "besar", "pos": "bawah"}
+        ],
         "next": "segmen_05_penetapan_gigit"
     },
     {
@@ -164,15 +330,14 @@
         "type": "decision",
         "title": "Segmen 5 - Penetapan Gigit + Bite Registration",
         "projection": "flat",
-        "video": "/videos/C0268.MP4",
         "remote": {
-            "fileId": "1nXnMXRgM3SwG_xuoGBqnHVC-4UBWisRW",
-            "fileName": "segmen 5.mp4",
-            "size": 193836985,
-            "md5": "aeeb7db2ade96d32badc59287eb5cd4c",
-            "version": 1
+            "fileId": "1apJt_kJT4uzS31em4Wf4GQI6zxwNY6kr",
+            "fileName": "segmen 5 new.mp4",
+            "size": 160277792,
+            "md5": "4936eae2781563ff4736a49bfafeaee5",
+            "version": 2
         },
-        "question": "Saat kedua bite rim diinsersikan bersamaan, tampak permukaan oklusal bite rim RB condong ke sisi kiri — belum sejajar dengan bite rim RA. Tindakan yang tepat sebelum bite registration dilakukan adalah:",
+        "question": "Saat kedua galangan gigit diinsersikan bersamaan, tampak permukaan oklusal galangan gigit RB condong ke sisi kiri — belum sejajar dengan galangan gigit RA. Tindakan yang tepat sebelum bite registration dilakukan adalah:",
         "options": [
             {
                 "label": "A",
@@ -182,43 +347,55 @@
             },
             {
                 "label": "B",
-                "text": "Koreksi posisi bite rim RB terlebih dahulu: tambahkan atau kurangi wax di sisi yang rendah hingga permukaan oklusal bite rim RA dan RB sejajar dan simetris, lalu lakukan bite registration.",
+                "text": "Koreksi posisi galangan gigit RB terlebih dahulu: tambahkan atau kurangi wax di sisi yang rendah hingga permukaan oklusal galangan gigit RA dan RB sejajar dan simetris, lalu lakukan bite registration.",
                 "correct": true,
-                "consequence": "konsekuensi_03_bite_registration_benar"
+                "consequence": "konsekuensi_03_bite_registration"
             }
         ],
         "overlays": [
-            { "id": "s5-dvr", "start": 80, "end": 83, "kind": "text", "text": "DVR = 60 mm", "size": "besar", "pos": "bawah" }
+            {"id": "s5-judul", "start": 0, "end": 5, "kind": "text", "text": "4. Penetapan Gigit dan\nFiksasi Galangan Gigit", "size": "judul", "pos": "atas"},
+            {"id": "s5-tinggi", "start": 32, "end": 36, "kind": "text", "text": "Pastikan Galangan Gigit Memiliki\nTinggi 22mm di *Anterior*,\n12mm di *Posterior*", "size": "besar", "pos": "bawah"},
+            {"id": "s5-oklusal", "start": 48, "end": 53, "kind": "text", "text": "Pastikan Oklusal Galangan Gigit\nSejajar Bidang *Chamfer*", "size": "besar", "pos": "bawah"},
+            {"id": "s5-willis", "start": 98, "end": 100, "kind": "text", "text": "Lakukan Pengukuran *DVR*\ndengan Jangka Willis", "size": "besar", "pos": "bawah"},
+            {"id": "s5-dvo", "start": 143, "end": 155, "kind": "text", "text": "*DVO* = *DVR* - *free way space* (2-4 mm)", "size": "besar", "pos": "bawah"},
+            {"id": "s5-simetris", "start": 178, "end": 181, "kind": "text", "text": "Pastikan Galangan Gigit\nAtas dan Bawah Sejajar", "size": "besar", "pos": "bawah"}
         ]
     },
     {
         "id": "konsekuensi_03_bite_registration_miring",
         "type": "consequence",
-        "title": "Konsekuensi - Bite Registration dengan Bite Rim Miring",
+        "title": "Konsekuensi - bite registration dengan galangan gigit miring",
         "projection": "flat",
-        "video": "/videos/C0268.MP4",
         "remote": {
-            "fileId": "1XZwC5W0bWT2ZftzzGbbZaYq70FUjMyLP",
-            "fileName": "konsekuensi salah segmen 5.mp4",
-            "size": 96755409,
-            "md5": "c9e3853599588fe89c82af235a11211c",
-            "version": 1
+            "fileId": "1HeFa1DxnAml37daKMDKlJyQDgMw9EZdf",
+            "fileName": "konsekuensi salah segmen 5 new.mp4",
+            "size": 118806350,
+            "md5": "f478fd062b6faadd6cf1a8fbb72658d5",
+            "version": 2
         },
+        "overlays": [
+            {"id": "k3-miring", "start": 47, "end": 60, "kind": "text", "text": "Proses penetapan gigit yang salah\ndapat mengakibatkan penyusunan\ngigi yang salah", "size": "besar", "pos": "bawah"},
+            {"id": "k3-ulang", "start": 80, "end": 85, "kind": "text", "text": "Penetapan gigit harus diulang dari awal", "size": "besar", "pos": "bawah"}
+        ],
         "returnTo": "segmen_05_penetapan_gigit"
     },
     {
-        "id": "konsekuensi_03_bite_registration_benar",
+        "id": "konsekuensi_03_bite_registration",
         "type": "consequence",
-        "title": "Konsekuensi - Bite Registration Benar",
+        "title": "Konsekuensi - bite registration",
         "projection": "flat",
-        "video": "/videos/C0268.MP4",
         "remote": {
-            "fileId": "1ZLAv0WG33KnVE7tUrfU75yzBFaU7KqgS",
-            "fileName": "konsekuensi benar segmen 5.mp4",
-            "size": 111510345,
-            "md5": "58fb90acbbd1ef9f28e266dfdb38bed8",
-            "version": 1
+            "fileId": "18-xRwsMaF3FSJrVzqN4PSFku-rfgp4gK",
+            "fileName": "konsekuensi benar segmen 5 new.mp4",
+            "size": 162772512,
+            "md5": "b5e19427e85331f43e9a9d490b9929fd",
+            "version": 2
         },
+        "overlays": [
+            {"id": "k3-adjustment", "start": 18, "end": 23, "kind": "text", "text": "Lakukan *adjustment* hingga permukaan\ngalangan gigit rahang atas dan\nrahang bawah sejajar", "size": "besar", "pos": "bawah"},
+            {"id": "k3-fiksasi", "start": 32, "end": 37, "kind": "text", "text": "Jika sudah sesuai, lakukan fiksasi\npada galangan gigit", "size": "besar", "pos": "bawah"},
+            {"id": "k3-staples", "start": 45, "end": 50, "kind": "text", "text": "Fiksasi dapat menggunakan *staples*\nuntuk cara termudah", "size": "besar", "pos": "bawah"}
+        ],
         "next": "segmen_06_try_in"
     },
     {
@@ -226,48 +403,56 @@
         "type": "linear",
         "title": "Segmen 6 - Pasang Coba Gigi Malam (Try-In)",
         "projection": "flat",
-        "video": "/videos/C0268.MP4",
         "remote": {
-            "fileId": "1tWJJ8hMdi_ypk3JNlE9qxrOTxtf2FS4X",
-            "fileName": "segmen 6.mp4",
-            "size": 224781889,
-            "md5": "0c68a8a5eb29fd351a2279fee7512edc",
-            "version": 1
+            "fileId": "1T6cfyb-IyK3b9uHUeIx_aCFhaXQfy0CC",
+            "fileName": "segmen 6 new.mp4",
+            "size": 313771477,
+            "md5": "f356aef64477a360da7beab03fb7b33e",
+            "version": 2
         },
+        "overlays": [
+            {"id": "s6-judul", "start": 0, "end": 8, "kind": "text", "text": "5. Pasang Coba Gigi Tiruan\nLengkap Malam", "size": "judul", "pos": "atas"},
+            {"id": "s6-evaluasi", "start": 20, "end": 25, "kind": "text", "text": "Lakukan Evaluasi pada\n5 Parameter secara Sistematis", "size": "besar", "pos": "bawah"},
+            {"id": "s6-estetik", "start": 30, "end": 35, "kind": "text", "text": "1. Estetik", "size": "besar", "pos": "bawah"},
+            {"id": "s6-dvo", "start": 55, "end": 60, "kind": "text", "text": "2. Dimensi Vertikal Oklusi", "size": "besar", "pos": "bawah"},
+            {"id": "s6-retensi", "start": 90, "end": 95, "kind": "text", "text": "3. Retensi", "size": "besar", "pos": "bawah"},
+            {"id": "s6-stabilitas", "start": 102, "end": 107, "kind": "text", "text": "4. Stabilitas", "size": "besar", "pos": "bawah"},
+            {"id": "s6-oklusi", "start": 128, "end": 133, "kind": "text", "text": "5. Oklusi", "size": "besar", "pos": "bawah"},
+            {"id": "s6-sentrik", "start": 150, "end": 155, "kind": "text", "text": "Posisikan Oklusi dalam\nKeadaan Relasi Sentrik", "size": "besar", "pos": "bawah"},
+            {"id": "s6-distribusi", "start": 168, "end": 173, "kind": "text", "text": "Pastikan Distribusi\nBeban Merata", "size": "besar", "pos": "bawah"},
+            {"id": "s6-bull", "start": 190, "end": 195, "kind": "text", "text": "Prinsip *BULL*\n(*Buccal of Upper and Lingual of Lower*)", "size": "besar", "pos": "bawah"}
+        ],
         "next": "segmen_07_insersi_gtl"
     },
     {
         "id": "segmen_07_insersi_gtl",
-        "type": "linear",
+        "type": "end",
         "title": "Segmen 7 - Insersi GTL Final",
         "projection": "360",
-        "video": "/videos/01-pembukaan.mp4",
+        "remote": {
+            "fileId": "1tjF3KHhiAM4NnRUbR2FLS8oq3kk3RLZQ",
+            "fileName": "segmen 7.mp4",
+            "size": 402853560,
+            "md5": "7f9bcb86695db5b20c08044b1b61a4bb",
+            "version": 1
+        },
         "overlays": [
-            { "id": "s7-judul", "start": 0, "end": 8, "kind": "text", "text": "Insersi Final GTL", "size": "judul", "pos": "atas" },
-            { "id": "s7-seal", "start": 49, "end": 51, "kind": "text", "text": "peripheral seal", "size": "besar", "pos": "bawah" },
-            { "id": "s7-oklusi", "start": 77, "end": 80, "kind": "text", "text": "Evaluasi Oklusi dengan Articulating Paper", "size": "besar", "pos": "bawah" },
-            { "id": "s7-bur", "start": 95, "end": 98, "kind": "text", "text": "Koreksi minimal dengan straight bur", "size": "besar", "pos": "bawah" },
-            { "id": "s7-instruksi", "start": 131, "end": 133, "kind": "text", "text": "Instruksi Pasien", "size": "besar", "pos": "bawah" },
-            { "id": "s7-poin", "start": 145, "end": 146, "kind": "text", "text": "4 Poin", "size": "besar", "pos": "bawah" },
-            { "id": "s7-p1", "start": 150, "end": 152, "kind": "text", "text": "1. Cara insersi dan melepaskan", "size": "besar", "pos": "bawah" },
-            { "id": "s7-p2", "start": 176, "end": 178, "kind": "text", "text": "2. Kebersihan", "size": "besar", "pos": "bawah" },
-            { "id": "s7-sikat", "start": 184, "end": 188, "kind": "text", "text": "Gunakan sikat halus dan sabun cair / pasta non abrasif", "size": "besar", "pos": "bawah" },
-            { "id": "s7-simpan", "start": 203, "end": 206, "kind": "text", "text": "Simpan di wadah berisi air bersih", "size": "besar", "pos": "bawah" },
-            { "id": "s7-p3", "start": 211, "end": 213, "kind": "text", "text": "3. Periode Adaptasi", "size": "besar", "pos": "bawah" },
-            { "id": "s7-p4", "start": 242, "end": 244, "kind": "text", "text": "4. Jadwal Kontrol", "size": "besar", "pos": "bawah" },
-            { "id": "s7-24jam", "start": 247, "end": 248, "kind": "text", "text": "24 jam setelah", "size": "besar", "pos": "bawah" },
-            { "id": "s7-minggu", "start": 254, "end": 257, "kind": "text", "text": "1 minggu", "size": "besar", "pos": "bawah" },
-            { "id": "s7-bulan", "start": 260, "end": 265, "kind": "text", "text": "1 bulan", "size": "besar", "pos": "bawah" },
-            { "id": "s7-6bulan", "start": 267, "end": 269, "kind": "text", "text": "6 bulan", "size": "besar", "pos": "bawah" },
-            { "id": "s7-selamat", "start": 275, "end": null, "kind": "text", "text": "SELAMAT!", "size": "judul", "pos": "atas" }
-        ],
-        "next": "selesai"
-    },
-    {
-        "id": "selesai",
-        "type": "end",
-        "title": "Selesai",
-        "projection": "360",
-        "video": "/videos/01-pembukaan.mp4"
+            {"id": "s7-judul", "start": 0, "end": 8, "kind": "text", "text": "6. Insersi Gigi Tiruan Lengkap", "size": "judul", "pos3d": [-2,2.5,-3], "rot": [0, 30, 0]},
+            {"id": "s7-seal", "start": 45, "end": 51, "kind": "text", "text": "Pastikan Gigi Tiruan Lengkap\nMemiliki *Peripheral Seal*", "size": "besar", "pos3d": [1.5,-0.6,-2.5], "rot": [-30, -45, 0]},
+            {"id": "s7-oklusi", "start": 77, "end": 80, "kind": "text", "text": "Evaluasi Oklusi\ndengan *Articulating Paper*", "size": "besar", "pos3d": [1.5,-0.6,-2.5], "rot": [-30, -45, 0]},
+            {"id": "s7-bur", "start": 95, "end": 98, "kind": "text", "text": "Lakukan Koreksi Oklusal Minimal\ndengan *Straight Bur*", "size": "besar", "pos3d": [1.5,-0.6,-2.5], "rot": [-30, -45, 0]},
+            {"id": "s7-instruksi", "start": 131, "end": 133, "kind": "text", "text": "Instruksi Pasien", "size": "besar", "pos3d": [1.5,-0.6,-2.5], "rot": [-30, -45, 0]},
+            {"id": "s7-p1", "start": 150, "end": 152, "kind": "text", "text": "1. Cara Insersi dan Melepaskan", "size": "besar", "pos3d": [0,0.3,-2.5], "rot": [-30,0, 0] },
+            {"id": "s7-p2", "start": 176, "end": 178, "kind": "text", "text": "2. Cara Menjaga Kebersihan", "size": "besar", "pos3d": [0,0.3,-2.5],"rot": [-30,0, 0]},
+            {"id": "s7-sikat", "start": 184, "end": 188, "kind": "text", "text": "Gunakan Sikat Halus dan Sabun Cair\n/ Pasta non Abrasif", "size": "besar", "pos3d": [0,0.3,-2.5],"rot": [-30,0, 0]},
+            {"id": "s7-simpan", "start": 203, "end": 206, "kind": "text", "text": "Simpan di Wadah Berisi Air Bersih", "size": "besar", "pos3d": [0,0.3,-2.5],"rot": [-30,0, 0]},
+            {"id": "s7-p3", "start": 211, "end": 213, "kind": "text", "text": "3. Periode Adaptasi", "size": "besar", "pos3d": [0,0.3,-2.5],"rot": [-30,0, 0]},
+            {"id": "s7-p4", "start": 242, "end": 244, "kind": "text", "text": "4. Jadwal Kontrol", "size": "besar", "pos3d": [0,0.3,-2.5],"rot": [-30,0, 0]},
+            {"id": "s7-24jam", "start": 247, "end": 248, "kind": "text", "text": "24 jam setelah", "size": "besar", "pos3d": [0,0.5,-2.5],"rot": [-30,0, 0]},
+            {"id": "s7-minggu", "start": 254, "end": 257, "kind": "text", "text": "1 minggu", "size": "besar", "pos3d": [0,0.5,-2.5],"rot": [-30,0, 0]},
+            {"id": "s7-bulan", "start": 260, "end": 265, "kind": "text", "text": "1 bulan", "size": "besar", "pos3d": [0,0.5,-2.5],"rot": [-30,0, 0]},
+            {"id": "s7-6bulan", "start": 267, "end": 269, "kind": "text", "text": "6 bulan", "size": "besar", "pos3d": [0,0.5,-2.5],"rot": [-30,0, 0]},
+            {"id": "s7-selamat", "start": 275, "end": 285, "kind": "text", "text": "SELAMAT ANDA TELAH MENYELESAIKAN MODUL\nPEMBUATAN GIGI TIRUAN LENGKAP!", "size": "judul", "pos3d": [-0.5,1,-3], "rot":[30, 0,0]}
+        ]
     }
 ]

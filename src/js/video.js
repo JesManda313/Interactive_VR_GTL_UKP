@@ -8,6 +8,50 @@
  * Dipisah dari scenario.js KENAPA? Agar logic video bisa dipakai ulang VR+mobile
  * tanpa circular import (scenario.js import file ini, bukan sebaliknya).
  */
+import { getFadeOverlays } from './fade.js';
+
+/**
+ * showVideoError(title):
+ * Untuk apa? Tampilkan pesan GAGAL PUTAR yang menetap di overlay fade (mobile + VR).
+ * KENAPA? Tanpa ini, video rusak/hilang = layar hitam misterius tanpa petunjuk
+ * (kasus nyata: file konsekuensi-salah 623MB ber-codec HEVC + durasi 1 detik).
+ * Dipanggil dari handler 'error' elemen video; render normal tidak tersentuh.
+ */
+export function showVideoError(title) {
+  try {
+    for (const mode of ['mobile', 'vr']) {
+      getFadeOverlays(mode).forEach((overlay) => {
+        const textEl = overlay.querySelector('.fade-message');
+        if (textEl) textEl.textContent = `Video gagal diputar${title ? `: ${title}` : ''} — cek file/unduhan modul.`;
+        overlay.classList.add('active');
+        overlay.style.opacity = '1';
+      });
+    }
+  } catch { /* overlay boleh tidak ada; jangan ganggu alur */ }
+}
+
+/** Judul pendek dari src untuk pesan error (tanpa blob/data raksasa). */
+function shortVideoLabel(video) {
+  const src = video?.getAttribute?.('src') ?? '';
+  if (!src) return '';
+  if (src.startsWith('data:')) return '(gambar/video data-URL)';
+  if (src.startsWith('blob:')) return '(berkas lokal)';
+  const clean = src.split('?')[0];
+  const parts = clean.split('/');
+  return parts[parts.length - 1] || clean.slice(-40);
+}
+
+/** Pasang sekali per elemen: error video -> warn console + pesan menetap di layar. */
+function hookVideoError(video) {
+  if (!video || video.dataset.errHook) return;
+  video.dataset.errHook = '1';
+  video.addEventListener('error', () => {
+    if (!video.getAttribute('src')) return; // abaikan saat cleanup (src sengaja dikosongkan).
+    const label = shortVideoLabel(video);
+    console.warn('Video gagal diputar:', video.getAttribute('src'));
+    showVideoError(label);
+  });
+}
 
 /**
  * ensureSharedVrVideo(scenario):
@@ -43,8 +87,12 @@ export function ensureSharedVrVideo(scenario) {
   }
 
   video.onerror = () => {
+    if (!video.getAttribute('src')) return;
     console.warn('Video VR gagal dimuat:', video.getAttribute('src'));
+    showVideoError(shortVideoLabel(video));
   };
+
+  hookVideoError(video);
 
   return video;
 }
@@ -99,6 +147,8 @@ export async function playActiveVideos() {
     if (!src) {
       continue; // lewati video kosong.
     }
+
+    hookVideoError(video);
 
     try {
       await video.play(); // await KENAPA? Tunggu 1 selesai sebelum lanjut agar log berurutan + hemat CPU.

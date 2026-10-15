@@ -211,8 +211,8 @@ function timedOverlayZone(overlay, { isFlat = false, isVr = false } = {}) {
   if (!isFlat) {
     const custom = customOverlayZone(overlay);
     if (custom) return custom;
-  } else if (overlay?.pos3d != null || overlay?.textX != null || overlay?.textY != null) {
-    console.warn(`[overlay] ${overlay?.id ?? '?'}: pos3d/textX/textY hanya berlaku di video 360, diabaikan di mode flat.`);
+  } else if (overlay?.pos3d != null || overlay?.textX != null || overlay?.textY != null || overlay?.rot != null) {
+    console.warn(`[overlay] ${overlay?.id ?? '?'}: pos3d/textX/textY/rot hanya berlaku di video 360, diabaikan di mode flat.`);
   }
   const atas = overlay?.pos === 'atas';
   if (isFlat) {
@@ -269,7 +269,8 @@ function clampOverlayImg(v, lo, hi, fb, label) {
  * Dipakai mode 360 (mobile) + semua mode VR; mobile-flat memakai kartu DOM.
  * Visibilitas diatur engine via atribut visible + data-overlay-id.
  * Field opsional khusus video 360 (mobile + VR; diabaikan di flat): "pos3d": [x, y, z]
- * (posisi bebas entity), "textX"/"textY" (offset teks lokal entity).
+ * (posisi bebas entity), "textX"/"textY" (offset teks lokal entity),
+ * "rot": [x, y, z] derajat (putaran teks + kotaknya; Y negatif = kiri menjauh).
  * Teks mendukung \n manual (maks 2 baris disarankan, 3 bila ekstrem).
  */
 export function buildTimedOverlaysHtml(scenario, { isVr = false, isFlat = false } = {}) {
@@ -352,6 +353,22 @@ export function buildTimedOverlaysHtml(scenario, { isVr = false, isFlat = false 
       if (only360 && overlay?.textY != null) {
         finalTextY = clampOverlayImg(overlay.textY, -2, 2, textY, `${overlay.id}.textY`);
       }
+      // Putaran teks manual (derajat, [x, y, z]) — video 360 (mobile + VR).
+      // "rot" null/absen = tegak [0,0,0]. Y negatif = sisi kiri menjauh.
+      const fmtDeg = (v) => String(Math.round(Number(v) * 100) / 100);
+      let rotX = 0, rotY = 0, rotZ = 0;
+      if (only360 && overlay?.rot != null) {
+        const r = overlay.rot;
+        if (!Array.isArray(r) || r.length !== 3 || !r.every((v) => Number.isFinite(Number(v)))) {
+          console.warn(`[overlay] ${overlay.id ?? '?'}: rot tidak valid (butuh [x, y, z] derajat), dipakai [0, 0, 0].`);
+        } else {
+          [rotX, rotY, rotZ] = r.map(Number);
+          if ([rotX, rotY, rotZ].some((v) => Math.abs(v) > 60)) {
+            console.warn(`[overlay] ${overlay.id ?? '?'}: rot [${rotX}, ${rotY}, ${rotZ}] curam (>60°), keterbacaan menurun.`);
+          }
+        }
+      }
+      const rotAttr = `${fmtDeg(rotX)} ${fmtDeg(rotY)} ${fmtDeg(rotZ)}`;
       autoRow.forEach((im) => { im.y = rowY; });
       rawImgs.forEach((im, i) => {
         if (im.y == null) im.y = rowY;
@@ -363,11 +380,12 @@ export function buildTimedOverlaysHtml(scenario, { isVr = false, isFlat = false 
       // satu kotak union seperti sebelumnya. Gaya kotak sama persis.
       // Backing kotak overlay: <a-plane> gelap semi-transparan di belakang isi agar teks/gambar terbaca di atas video terang.
       const splitBox = rawImgs.some((im) => im.src);
-      const boxPlane = (w, h, x, y) => `
+      const boxPlane = (w, h, x, y, rot = '0 0 0') => `
           <a-plane
             width="${w.toFixed(3)}"
             height="${h.toFixed(3)}"
             position="${x.toFixed(3)} ${y.toFixed(3)} 0"
+            rotation="${rot}"
             color="#0a1016"
             opacity="0.55"
             material="shader: flat"
@@ -393,7 +411,7 @@ export function buildTimedOverlaysHtml(scenario, { isVr = false, isFlat = false 
           backingX = (minX + maxX) / 2;
           backingY = (minY + maxY) / 2;
         }
-        backingPlanes = boxPlane(backingW, backingH, backingX, backingY);
+        backingPlanes = boxPlane(backingW, backingH, backingX, backingY, rotAttr);
       }
 
       let inner = '';
@@ -415,7 +433,7 @@ export function buildTimedOverlaysHtml(scenario, { isVr = false, isFlat = false 
         `;
       });
       if (hasBody) {
-        if (splitBox) backingPlanes += boxPlane(textW + PAD_H * 2, textH + PAD_V * 2, textX, finalTextY);
+        if (splitBox) backingPlanes += boxPlane(textW + PAD_H * 2, textH + PAD_V * 2, textX, finalTextY, rotAttr);
         inner += `
           <a-text
             value="${safeText(overlay.kind === 'image' ? cleanCaption : cleanText)}"
@@ -423,6 +441,7 @@ export function buildTimedOverlaysHtml(scenario, { isVr = false, isFlat = false 
             width="${textWidth}"
             color="#ffffff"
             position="${textX.toFixed(3)} ${finalTextY.toFixed(3)} 0.02"
+            rotation="${rotAttr}"
             scale="${textScale}"
             wrap-count="40"
           ></a-text>
@@ -480,6 +499,75 @@ export function buildWorldBackButtonHtml() {
         width="1.65"
         color="#183247"
         position="0 0 0.03"
+        wrap-count="12"
+      ></a-text>
+    </a-entity>
+  `;
+}
+
+/** Bangun HTML A-Frame untuk gerbang START VR (jeda tiap segmen sampai user siap). */
+export function buildVrStartGateHtml() {
+  // UNTUK APA? Panel "siap putar" di depan kamera VR: video di-pause sampai
+  // user memasang HP ke kacamata lalu menatap panel + tekan tombol remote.
+  // KENAPA? Tanpa jeda, video langsung jalan saat HP masih di tangan user.
+  // KENAPA seluruh panel clickable (bukan cuma tombol)? Target tatap lebih
+  // besar = lebih mudah kena gaze cursor + remote.
+  return `
+    <a-entity
+      class="vr-start-gate"
+      visible="true"
+      position="0 1.9 -2.2"
+    >
+      <a-plane
+        class="clickable"
+        width="1.7"
+        height="1.15"
+        color="#0b1520"
+        opacity="0.94"
+        material="shader: flat"
+      ></a-plane>
+      <a-plane
+        class="clickable"
+        width="1.7"
+        height="0.08"
+        color="#facc15"
+        position="0 0.53 0.02"
+        material="shader: flat"
+      ></a-plane>
+      <a-text
+        class="clickable"
+        value="SIAP MEMUTAR?"
+        align="center"
+        width="1.5"
+        color="#facc15"
+        position="0 0.32 0.02"
+        wrap-count="20"
+      ></a-text>
+      <a-text
+        class="clickable"
+        value="Pasang HP ke kacamata VR, lalu arahkan pandangan ke START dan tekan tombol confirmation."
+        align="center"
+        width="1.5"
+        color="#ffffff"
+        position="0 0.02 0.02"
+        wrap-count="28"
+      ></a-text>
+      <a-plane
+        class="clickable"
+        width="0.9"
+        height="0.34"
+        color="#16a34a"
+        opacity="0.97"
+        position="0 -0.36 0.02"
+        material="shader: flat"
+      ></a-plane>
+      <a-text
+        class="clickable"
+        value="START"
+        align="center"
+        width="1.2"
+        color="#ffffff"
+        position="0 -0.36 0.04"
         wrap-count="12"
       ></a-text>
     </a-entity>
@@ -621,6 +709,8 @@ export function buildSceneHtml({ mode, eye = 'main', scenario }) {
     isVr && isFlatVideo(scenario) ? '-2.45' : '-3.1',
   );
   const worldBackButtonHtml = buildWorldBackButtonHtml();
+  // Gerbang START khusus VR: jeda tiap segmen sampai user siap (mobile tidak pakai).
+  const vrStartGateHtml = isVr ? buildVrStartGateHtml() : '';
 
   const cameraControls = isVr
     ? 'look-controls="touchEnabled: false; mouseEnabled: false; magicWindowTrackingEnabled: true"'
@@ -753,6 +843,7 @@ export function buildSceneHtml({ mode, eye = 'main', scenario }) {
       </a-entity>
 
       ${worldBackButtonHtml}
+      ${vrStartGateHtml}
       ${timedOverlaysHtml}
       ${quizHtml}
     </a-scene>

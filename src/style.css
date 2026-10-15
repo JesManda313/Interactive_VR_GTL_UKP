@@ -582,6 +582,35 @@ h2 { font-family: var(--font-display); font-weight: 500; color: var(--ink); font
 .mobile-flat-wrap:fullscreen .mobile-flat-video {
   width: 100%; height: 100%; object-fit: contain;
 }
+/* WebKit (Safari / WebView Android lama): pseudo fullscreen-prefixed */
+.mobile-flat-wrap:-webkit-full-screen {
+  width: 100vw; max-width: none; height: 100vh; height: 100dvh;
+}
+.mobile-flat-wrap:-webkit-full-screen .mobile-flat-video {
+  width: 100%; height: 100%; object-fit: contain;
+}
+/* Overlay terjadwal harus di atas video + topbar saat fullscreen.
+   (Di dalam wrap: video tanpa z-index, topbar z=5, hint z=6, kuis z=20, fade z=50.) */
+.mobile-flat-wrap:fullscreen .mobile-timed-overlay,
+.mobile-flat-wrap:-webkit-full-screen .mobile-timed-overlay {
+  z-index: 30;
+}
+.mobile-flat-wrap:fullscreen .mobile-timed-overlay.pos-bawah,
+.mobile-flat-wrap:-webkit-full-screen .mobile-timed-overlay.pos-bawah {
+  bottom: calc(76px + env(safe-area-inset-bottom));
+}
+@media (orientation: landscape) {
+  /* Angkat kartu bawah agar tidak tertutup kontrol native video di landscape */
+  .mobile-timed-overlay.pos-bawah { bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .mobile-timed-overlay { max-width: min(560px, 80vw); }
+  /* Di landscape video Sony terang + layar lebar: teks putih transparan amblas,
+     jadi kembalikan pill gelap agar terbaca (portrait tetap transparan). */
+  .mobile-timed-overlay.style-flat {
+    background: rgba(0,0,0,.55);
+    border-radius: 12px;
+    padding: 8px 34px 8px 12px;
+  }
+}
 
 /* ============ DOWNLOAD MODUL (PUBG-style) ============ */
 .dl-panel { margin-top: 26px; padding: 20px 18px; border-radius: 18px; background: #fff; box-shadow: 0 8px 28px rgba(114, 129, 223, .12); }
@@ -596,14 +625,14 @@ h2 { font-family: var(--font-display); font-weight: 500; color: var(--ink); font
 /* ============ TIMED OVERLAY (teks/gambar detik tertentu) ============ */
 .mobile-timed-overlay {
   position: absolute; left: 16px; right: 16px; z-index: 15;
-  max-width: 150px; margin: 0 auto; padding: 6px 16px 6px 9px; border-radius: 12px;
+  max-width: 600px; margin: 0 auto; padding: 6px 16px 6px 9px; border-radius: 12px;
   color: #fff; background: rgba(10, 16, 22, .88);
   border-left: 4px solid #facc15;
   box-shadow: 0 12px 40px rgba(0,0,0,.4);
 }
 .mobile-timed-overlay.hidden { display: none !important; }
-.mobile-timed-overlay.pos-bawah { bottom: calc(16px + env(safe-area-inset-bottom)); }
-.mobile-timed-overlay.pos-atas { top: calc(12px + env(safe-area-inset-top)); }
+.mobile-timed-overlay.pos-bawah { bottom: calc(30px + env(safe-area-inset-bottom)); }
+.mobile-timed-overlay.pos-atas { top: calc(40px + env(safe-area-inset-top)); }
 /* Varian flat Sony: teks putih tanpa kotak, di strip bawah bingkai video. */
 .mobile-timed-overlay.style-flat {
   background: transparent; border: 0; border-left: 0; box-shadow: none;
@@ -613,10 +642,10 @@ h2 { font-family: var(--font-display); font-weight: 500; color: var(--ink); font
   color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.7);
 }
 .mobile-timed-overlay.style-flat .mobile-timed-close { background: rgba(0,0,0,.35); }
-.mobile-timed-text { margin: 0; white-space: pre-line; font-family: 'Open Sans', var(--font-body); font-size: 20px; font-weight: 600; line-height: 1.5; }
+.mobile-timed-text { margin: 0; white-space: pre-line; font-family: 'Open Sans', var(--font-body); font-size: 12px; font-weight: 600; line-height: 1.5; }
 .mobile-timed-text i, .mobile-timed-text em { font-style: italic; }
-.mobile-timed-overlay.sz-besar .mobile-timed-text { font-size: 20px; }
-.mobile-timed-overlay.sz-judul .mobile-timed-text { font-size: 20px; }
+.mobile-timed-overlay.sz-besar .mobile-timed-text { font-size: 15px; }
+.mobile-timed-overlay.sz-judul .mobile-timed-text { font-size: 16px; }
 .mobile-timed-imgs { display: flex; gap: 8px; margin-bottom: 8px; }
 .mobile-timed-imgs:empty { display: none; margin: 0; }
 .mobile-timed-imgs .mobile-timed-img { display: block; flex: 1 1 0; min-width: 0; max-height: 160px; object-fit: cover; border-radius: 10px; margin: 0; }

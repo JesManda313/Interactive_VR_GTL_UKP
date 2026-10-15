@@ -11,7 +11,7 @@ import { store } from './store.js'; // baca/tulis activeModule/activeMode. KENAP
 import { applyCalibrationTarget } from './calibration.js'; // terapkan geser mata setelah scene kalibrasi dibuat.
 import { clearScenes } from './video.js'; // bersihkan video/scene lama sebelum pindah. KENAPA? Cegah suara dobel + memori bocor.
 import { buildCalibrationSceneHtml } from './scene-builders.js'; // bangun HTML A-Frame kalibrasi.
-import { bindSceneEvents, renderActiveScenario, setNavHandlers } from './scenario.js'; // render engine + daftarkan handler balik (hindari circular via setter).
+import { bindSceneEvents, lockLandscape, renderActiveScenario, setNavHandlers, unlockOrientation } from './scenario.js'; // render engine + kunci orientasi + daftarkan handler balik (hindari circular via setter).
 import { applyImageUris, applyLocalVideos } from './download-manager.js'; // petakan file lokal yang sudah diunduh ke scenario.video.
 import { firstScenarioId, isUnlocked } from './progress.js'; // tentukan segmen mulai yang boleh dibuka.
 
@@ -58,6 +58,7 @@ export function showScreen(name) {
  */
 export function backToModeSelection() {
   store.activeMode = null;
+  unlockOrientation();
   clearScenes();
   showScreen('mode');
 }
@@ -75,6 +76,7 @@ export function backToModules() {
   store.activeScenarioId = null;
   store.activeMode = null;
 
+  unlockOrientation();
   clearScenes();
   showScreen('home');
 }
@@ -104,6 +106,7 @@ export function openCalibrationScreen() {
   store.previousCalibrationButtons = []; // reset edge-detection tombol.
   clearScenes();
   showScreen('vr');
+  lockLandscape();
   renderCalibrationScene();
 }
 

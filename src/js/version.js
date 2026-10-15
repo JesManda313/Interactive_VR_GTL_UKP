@@ -13,4 +13,4 @@
  *     Tanpa penanda versi, kamu bingung "ini APK baru atau lama?".
  *     Format tanggal-tujuan membuatnya mudah dibaca manusia.
  */
-export const BUILD_VERSION = '2026-05-27-calib-back';
+export const BUILD_VERSION = '2026-10-13-vr-lock-nodebug';

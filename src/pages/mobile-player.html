@@ -11,7 +11,6 @@
         <strong id="mobileFlatTitle">-</strong>
         <span id="mobileFlatTag">-</span>
       </div>
-      <button id="mobileFlatRotate" class="mobile-flat-back" type="button">⛶ Landscape</button>
     </div>
 
     <video
@@ -47,16 +46,23 @@
         <button id="mobileEndBack" class="btn-primary" type="button">Kembali ke mode</button>
       </div>
     </div>
+
+    <!-- Overlay terjadwal flat: di dalam wrap agar tetap terlihat saat fullscreen landscape -->
+    <div id="mobileTimedOverlay" class="mobile-timed-overlay pos-bawah hidden">
+      <button id="mobileTimedClose" class="mobile-timed-close" type="button" aria-label="Tutup">✕</button>
+      <div id="mobileTimedImgs" class="mobile-timed-imgs"></div>
+      <p id="mobileTimedText" class="mobile-timed-text"></p>
+    </div>
+
+    <!-- Fade khusus flat: di dalam wrap agar transisi tetap terlihat saat fullscreen.
+         #mobileFadeOverlay di luar tetap ada untuk mode 360 (lihat fade.js). -->
+    <div id="mobileFlatFadeOverlay" class="fade-overlay mobile-fade-overlay">
+      <div class="fade-message"></div>
+    </div>
   </div>
 
-  <!-- Overlay terjadwal (teks/gambar detik tertentu, semua mode mobile) -->
-  <div id="mobileTimedOverlay" class="mobile-timed-overlay pos-bawah hidden">
-    <button id="mobileTimedClose" class="mobile-timed-close" type="button" aria-label="Tutup">✕</button>
-    <div id="mobileTimedImgs" class="mobile-timed-imgs"></div>
-    <p id="mobileTimedText" class="mobile-timed-text"></p>
-  </div>
-
-  <div id="mobileFadeOverlay" class="fade-overlay">
+  <!-- Fade untuk mode 360 (di luar wrap karena wrap hidden saat 360) -->
+  <div id="mobileFadeOverlay" class="fade-overlay mobile-fade-overlay">
     <div id="mobileFadeText" class="fade-message"></div>
   </div>
 </section>
