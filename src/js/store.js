@@ -56,6 +56,10 @@ export const store = {
   // -> balik ke decision dan LANGSUNG tampilkan kuis lagi tanpa perlu nonton ulang video decision.
   shouldShowQuizImmediately: false,
 
+  // awaitMobileGuide: Untuk apa? Gerbang blokir panduan mobile — video di-pause
+  // sampai user tekan "Mengerti, mulai" di modal panduan (ditutup oleh closeMobileGuide).
+  awaitMobileGuide: false,
+
   // calibration: kalibrasi IPD / vertical shift (geser gambar kiri/kanan/atas/bawah dalam pixel).
   // Untuk apa? Menyelaraskan tampilan VR kiri-kanan agar tidak double/berbayang.
   // selectedCalibrationEye: mata mana yang sedang digeser ('left'/'right').

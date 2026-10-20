@@ -51,7 +51,7 @@ export function buildOptionsHtml(options = [], variant = 'mobile') {
   // Total lebar yang tersedia untuk baris opsi (di dalam panel)
   // Perhitungan lebar opsi: bagi ruang tersedia dikurangi total jeda antar tombol,
   // agar N opsi selalu pas selebar panel tanpa tumpuk atau keluar bingkai.
-  const availableWidth = variant === 'vr' ? 1.95 : 4.2;
+  const availableWidth = variant === 'vr' ? 2.2 : 4.2;
   const gapX = variant === 'vr' ? 0.08 : 0.15;
 
   const optionWidth = (availableWidth - gapX * (count - 1)) / count;
@@ -116,7 +116,7 @@ export function buildQuizPanelHtml(scenario, variant = 'mobile', quizZ = '-3.1')
     return '';
   }
 
-  const panelWidth = variant === 'vr' ? '2.25' : '4.7';
+  const panelWidth = variant === 'vr' ? '2.5' : '4.7';
   const panelHeight = variant === 'vr' ? '2.35' : '3.05';
   const questionWidth = variant === 'vr' ? '1.95' : '3.4';
   const questionY = variant === 'vr' ? '0.62' : '0.8';
@@ -473,8 +473,8 @@ export function buildWorldBackButtonHtml() {
   return `
     <a-entity
       class="world-back-button clickable"
-      position="-1.65 2.05 3.2"
-      rotation="0 180 0"
+      position="-5 4 -3.2"
+      rotation="0 30 0"
     >
       <a-plane
         class="world-back-button-bg clickable"
@@ -612,36 +612,54 @@ export function buildCalibrationSceneHtml({ eye = 'left' } = {}) {
         </a-camera>
       </a-entity>
 
-      <a-entity position="0 0 0">
+      <a-entity position="0 2.2 2.5" rotation="0 180 0">
+        <a-plane
+          width="2.4"
+          height="0.7"
+          color="#0b1520"
+          opacity="0.92"
+          material="shader: flat"
+        ></a-plane>
+        <a-text
+          value="Putar badan untuk melihat guide."
+          align="center"
+          width="2.0"
+          color="#ffffff"
+          position="0 0 0.02"
+          wrap-count="30"
+        ></a-text>
+      </a-entity>
+
+      <a-entity position="0 1.6 -3">
         <a-ring
-          radius="0.18"
+          radius="0.3"
           color="#facc15"
           opacity="0.9"
           material="shader: flat; side: double"
-          position="0 0 1"
+          position="0 0 0"
         ></a-ring>
         <a-plane
-          width="0.02"
-          height="0.26"
+          width="0.03"
+          height="0.44"
           color="#facc15"
           opacity="0.9"
           material="shader: flat"
-          position="0 0 1.02"
+          position="0 0 0.02"
         ></a-plane>
         <a-plane
-          width="0.26"
-          height="0.02"
+          width="0.44"
+          height="0.03"
           color="#facc15"
           opacity="0.9"
           material="shader: flat"
-          position="0 0 1.02"
+          position="0 0 0.02"
         ></a-plane>
       </a-entity>
 
       <a-entity position="0 2.2 -2.5">
         <a-plane
           width="2.4"
-          height="1.35"
+          height="2.2"
           color="#0b1520"
           opacity="0.92"
           material="shader: flat"
@@ -651,23 +669,47 @@ export function buildCalibrationSceneHtml({ eye = 'left' } = {}) {
           align="center"
           width="1.8"
           color="#facc15"
-          position="0 0.48 0.02"
+          position="0 0.92 0.02"
           wrap-count="20"
         ></a-text>
         <a-text
-          value="Tekan tombol B untuk mengatur panel kiri, tekan tombol Y untuk mengatur panel kanan."
+          value="Tombol B : atur panel kiri."
           align="center"
           width="2.0"
           color="#ffffff"
-          position="0 0.18 0.02"
+          position="0 0.66 0.02"
           wrap-count="30"
         ></a-text>
         <a-text
-          value="Gunakan joystick pada remote untuk mengatur panel yang aktif ke kiri atau lebih ke kanan."
+          value="Tombol Y : atur panel kanan."
           align="center"
           width="2.0"
           color="#ffffff"
-          position="0 -0.18 0.02"
+          position="0 0.40 0.02"
+          wrap-count="30"
+        ></a-text>
+        <a-text
+          value="Joystick : geser panel aktif ke kiri / kanan."
+          align="center"
+          width="2.0"
+          color="#ffffff"
+          position="0 0.14 0.02"
+          wrap-count="30"
+        ></a-text>
+        <a-text
+          value="Tombol X : naikkan volume HP. Tombol A : turunkan volume HP."
+          align="center"
+          width="2.0"
+          color="#ffffff"
+          position="0 -0.14 0.02"
+          wrap-count="30"
+        ></a-text>
+        <a-text
+          value="Arahkan kursor ke tombol, lalu tekan tombol konfirmasi pada remote untuk memilih."
+          align="center"
+          width="2.0"
+          color="#ffffff"
+          position="0 -0.44 0.02"
           wrap-count="30"
         ></a-text>
         <a-text
@@ -675,9 +717,26 @@ export function buildCalibrationSceneHtml({ eye = 'left' } = {}) {
           align="center"
           width="2.0"
           color="#9fb3c8"
-          position="0 -0.46 0.02"
+          position="0 -0.74 0.02"
           wrap-count="30"
         ></a-text>
+      </a-entity>
+
+      <a-entity position="2.3 2.0 -2.5" rotation="0 -30 0">
+        <a-plane
+          width="2.2"
+          height="2.15"
+          color="#0b1520"
+          opacity="0.92"
+          material="shader: flat"
+        ></a-plane>
+        <a-image
+          src="/content/assets/gambar-remote.jpeg"
+          width="2.0"
+          height="1.93"
+          position="0 0 0.02"
+          material="shader: flat"
+        ></a-image>
       </a-entity>
 
       ${worldBackButtonHtml}
@@ -714,7 +773,7 @@ export function buildSceneHtml({ mode, eye = 'main', scenario }) {
 
   const cameraControls = isVr
     ? 'look-controls="touchEnabled: false; mouseEnabled: false; magicWindowTrackingEnabled: true"'
-    : 'look-controls="touchEnabled: true; mouseEnabled: true; magicWindowTrackingTrackingEnabled: false"';
+    : 'look-controls="touchEnabled: true; mouseEnabled: true; magicWindowTrackingEnabled: true"';
 
   const cursor = isVr
     ? `

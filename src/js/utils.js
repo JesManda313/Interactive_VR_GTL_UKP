@@ -23,3 +23,18 @@ export function safeText(value) {
     .replace(/</g, '&lt;') // < -> &lt; KENAPA? Agar tidak dianggap awal tag HTML.
     .replace(/>/g, '&gt;'); // > -> &gt; KENAPA? Pasangan < agar lengkap + cegah break tag.
 }
+
+/** Toast global non-blocking. Satu elemen #appToast dipakai ulang. */
+export function showToast(message, ms = 2600) {
+  let el = document.getElementById('appToast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'appToast';
+    el.className = 'app-toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = String(message ?? '');
+  el.classList.add('show');
+  window.clearTimeout(el._hideTimer);
+  el._hideTimer = window.setTimeout(() => el.classList.remove('show'), ms);
+}

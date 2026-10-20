@@ -9,9 +9,9 @@
  */
 import { store } from './store.js'; // baca/tulis activeModule/activeMode. KENAPA? Navigasi harus reset state saat pindah.
 import { applyCalibrationTarget } from './calibration.js'; // terapkan geser mata setelah scene kalibrasi dibuat.
-import { clearScenes } from './video.js'; // bersihkan video/scene lama sebelum pindah. KENAPA? Cegah suara dobel + memori bocor.
+import { clearScenes, playActiveVideos } from './video.js'; // bersihkan video/scene lama sebelum pindah. KENAPA? Cegah suara dobel + memori bocor. playActiveVideos untuk gerbang panduan mobile.
 import { buildCalibrationSceneHtml } from './scene-builders.js'; // bangun HTML A-Frame kalibrasi.
-import { bindSceneEvents, lockLandscape, renderActiveScenario, setNavHandlers, unlockOrientation } from './scenario.js'; // render engine + kunci orientasi + daftarkan handler balik (hindari circular via setter).
+import { bindSceneEvents, lockLandscape, renderActiveScenario, setNavHandlers, unlockOrientation, cancelPendingRedirects } from './scenario.js'; // render engine + kunci orientasi + daftarkan handler balik (hindari circular via setter).
 import { applyImageUris, applyLocalVideos } from './download-manager.js'; // petakan file lokal yang sudah diunduh ke scenario.video.
 import { firstScenarioId, isUnlocked } from './progress.js'; // tentukan segmen mulai yang boleh dibuka.
 
@@ -59,7 +59,11 @@ export function showScreen(name) {
 export function backToModeSelection() {
   store.activeMode = null;
   unlockOrientation();
+  try {
+    cancelPendingRedirects();
+  } catch { /* abaikan */ }
   clearScenes();
+  closeStalePopups();
   showScreen('mode');
 }
 
@@ -78,7 +82,74 @@ export function backToModules() {
 
   unlockOrientation();
   clearScenes();
+  closeStalePopups();
   showScreen('home');
+}
+
+// closeStalePopups(): Untuk apa? Pastikan tidak ada popup/quiz yang nyangkut
+// terlihat setelah pindah layar. KENAPA? Popup fixed (mode/remote/quiz) hidup di
+// luar screen yang di-hidden, jadi showScreen saja tidak menutupnya.
+function closeStalePopups() {
+  store.awaitMobileGuide = false; // gerbang panduan ikut reset agar autoplay berikutnya tidak tertahan.
+  for (const id of ['modePopup', 'remotePopup', 'mobileQuizPopup', 'mobileEndPopup', 'mobileGuideModal']) {
+    document.getElementById(id)?.classList.add('hidden');
+  }
+}
+
+// closeMobileGuide(): Untuk apa? Satu-satunya fungsi penutup modal panduan mobile.
+// KENAPA fungsi tunggal? Agar tombol, klik backdrop, dan tombol kembali semua memanggil
+// jalur yang sama — tidak ada state ganda yang bisa bikin stuck.
+// KENAPA putar video di sini? Modal ini gerbang blokir: video di-pause selama modal
+// terbuka (lihat awaitMobileGuide), jadi penutupan = sinyal "user siap, putar sekarang".
+export function closeMobileGuide() {
+  document.getElementById('mobileGuideModal')?.classList.add('hidden');
+  if (store.awaitMobileGuide) {
+    store.awaitMobileGuide = false;
+    playActiveVideos();
+  }
+}
+
+let mobileGuideWired = false; // wiring sekali saja. KENAPA? openMode dipanggil tiap segmen; tanpa flag, listener tombol menumpuk.
+
+// wireMobileGuideOnce(): Untuk apa? Pasang listener tombol + backdrop + kembali sekali setelah DOM ada.
+// KENAPA di sini (bukan init)? mobile-player.html di-inject via ?raw saat start; wiring di openMode
+// menjamin elemen sudah ada. KENAPA guard flag? Agar tidak dobel listener tiap buka mode.
+function wireMobileGuideOnce() {
+  if (mobileGuideWired) return;
+  const modal = document.getElementById('mobileGuideModal');
+  const closeBtn = document.getElementById('mobileGuideClose');
+  const backBtn = document.getElementById('mobileGuideBack');
+  if (!modal || !closeBtn) return; // HTML belum ada -> coba lagi di openMode berikutnya, jangan crash.
+  closeBtn.addEventListener('click', closeMobileGuide);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeMobileGuide(); // klik area gelap = tutup + putar.
+  });
+  // Jalan keluar darurat anti-stuck: kalau user tidak mau lanjut, kembali ke pilih
+  // mode tanpa memutar video (flag dibersihkan agar autoplay tidak nyangkut).
+  backBtn?.addEventListener('click', () => {
+    store.awaitMobileGuide = false;
+    document.getElementById('mobileGuideModal')?.classList.add('hidden');
+    backToModeSelection();
+  });
+  mobileGuideWired = true;
+}
+
+// showMobileGuide(): Untuk apa? Gerbang blokir tiap masuk mobile mode: modal tampil
+// dulu, video di-pause (renderActiveScenario menahan autoplay via awaitMobileGuide),
+// dan video baru diputar saat user tekan "Mengerti, mulai" (closeMobileGuide).
+// KENAPA tiap masuk (bukan sekali)? User bisa lupa cara menjawab/drag/gyro.
+function showMobileGuide() {
+  wireMobileGuideOnce();
+  const modal = document.getElementById('mobileGuideModal');
+  if (!modal) {
+    store.awaitMobileGuide = false; // modal tidak ada -> jangan tahan video selamanya.
+    return;
+  }
+  store.awaitMobileGuide = true; // tahan autoplay; dibersihkan oleh closeMobileGuide.
+  try {
+    document.querySelectorAll('.scenario-video').forEach((v) => v.pause());
+  } catch { /* abaikan */ }
+  modal.classList.remove('hidden');
 }
 
 // renderCalibrationScene(): Untuk apa? Render 2 scene kalibrasi (kiri+kanan) ke mount VR.
@@ -147,7 +218,13 @@ export async function openMode(mode, startId = null) {
 
   clearScenes();
   showScreen(mode === 'vr' ? 'vr' : 'mobile');
+  // Gerbang blokir mobile: pasang flag SEBELUM render. KENAPA harus sebelum?
+  // renderActiveScenario menjadwalkan autoplay (setTimeout 400ms) di dalamnya —
+  // kalau flag dipasang setelah await render, jadwal itu sudah terlanjur dibuat
+  // dan video tetap jalan sendiri di belakang modal (bug kemarin).
+  if (mode === 'mobile') store.awaitMobileGuide = true;
   await renderActiveScenario(); // render segmen pertama. KENAPA await? Tunggu fade/transisi selesai.
+  if (mode === 'mobile') showMobileGuide(); // tampilkan modal; video diputar saat "Mengerti" ditekan.
 }
 
 // Daftarkan handler navigasi ke scenario engine (untuk world-back-button).

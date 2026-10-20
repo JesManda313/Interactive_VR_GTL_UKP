@@ -619,6 +619,20 @@ function handleModuleEnd() {
   endRedirectTimer = window.setTimeout(goBack, 600);
 }
 
+/**
+ * cancelPendingRedirects():
+ * Untuk apa? Batalkan timer auto-kembali yang masih tertunda saat user keluar player manual.
+ * KENAPA? Tanpa ini, timer nyasar bisa memicu navigasi/animasi setelah layar berganti
+ * (salah satu pemicu bug popup stuck di layar mode).
+ */
+export function cancelPendingRedirects() {
+  if (endRedirectTimer) {
+    window.clearTimeout(endRedirectTimer);
+    endRedirectTimer = null;
+  }
+  detachTimedOverlays();
+}
+
 export function handleVideoEnded() {
   // handleVideoEnded: UNTUK APA? Router alur setelah video habis berdasarkan scenario.type.
   // KENAPA? Tiap tipe beda: decision tampilkan kuis; consequence/linear ikuti next/returnTo; end tutup modul.
@@ -890,8 +904,11 @@ export async function renderActiveScenario() {
       showQuiz();
       store.shouldShowQuizImmediately = false;
     }, 500);
-  } else if (store.activeMode !== 'vr') {
+  } else if (store.activeMode !== 'vr' && !store.awaitMobileGuide) {
     // Mobile (flat/360) auto-play; VR menunggu tombol START di environment.
+    // KENAPA cek awaitMobileGuide? Gerbang panduan: video ditahan sampai user
+    // tekan "Mengerti, mulai" (closeMobileGuide yang memutar). Tanpa cek ini,
+    // video jalan duluan di belakang modal padahal user belum siap.
     setTimeout(playActiveVideos, 400);
   }
 

@@ -11,6 +11,7 @@
 import { backToModules, openMode } from './navigation.js'; // pindah layar + masuk player.
 import { store } from './store.js'; // baca activeModule/scenarios.
 import { safeText } from './utils.js'; // escape judul agar aman.
+import { confirmRemoteBeforeVr } from './remote-gate.js'; // gerbang remote BT sebelum VR.
 import {
   firstScenarioId,
   isUnlocked,
@@ -153,6 +154,43 @@ function closePopup() {
 }
 
 /**
+ * wirePopupButtons():
+ * Untuk apa? Pasang ulang handler tombol popup setiap layar mode tampil.
+ * KENAPA onclick + dipanggil ulang (bukan addEventListener sekali)? Agar handler
+ * tidak mungkin hilang/lepas setelah pulang dari player (bug popup stuck:
+ * tombol VR/HP/Batal tidak bisa diklik). onclick menimpa, jadi aman dipanggil berulang.
+ */
+function wirePopupButtons() {
+  const vrBtn = document.getElementById('popupVrMode');
+  if (vrBtn) {
+    vrBtn.onclick = () => {
+      const startId = pendingScenarioId;
+      closePopup();
+      confirmRemoteBeforeVr({
+        onContinue: () => openMode('vr', startId),
+      });
+    };
+  }
+  const hpBtn = document.getElementById('popupMobileMode');
+  if (hpBtn) {
+    hpBtn.onclick = () => {
+      const startId = pendingScenarioId;
+      closePopup();
+      openMode('mobile', startId);
+    };
+  }
+  const cancelBtn = document.getElementById('popupCancel');
+  if (cancelBtn) cancelBtn.onclick = closePopup;
+  const backdrop = document.getElementById('modePopup');
+  if (backdrop && !backdrop.dataset.backdropWired) {
+    backdrop.dataset.backdropWired = '1';
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) closePopup();
+    });
+  }
+}
+
+/**
  * initMode():
  * Untuk apa? Wire tombol-tombol milik mode.html (sekali saat start).
  * - #backToModules -> kembali daftar. - #popupVrMode/#popupMobileMode -> ambil pending id, tutup popup, openMode().
@@ -164,17 +202,7 @@ function closePopup() {
 export function initMode() {
   document.getElementById('backToModules')?.addEventListener('click', backToModules);
 
-  document.getElementById('popupVrMode')?.addEventListener('click', () => {
-    const startId = pendingScenarioId;
-    closePopup();
-    openMode('vr', startId);
-  });
-  document.getElementById('popupMobileMode')?.addEventListener('click', () => {
-    const startId = pendingScenarioId;
-    closePopup();
-    openMode('mobile', startId);
-  });
-  document.getElementById('popupCancel')?.addEventListener('click', closePopup);
+  wirePopupButtons();
 
   document.getElementById('restartModule')?.addEventListener('click', () => {
     if (!store.activeModule) return;
@@ -184,7 +212,12 @@ export function initMode() {
     if (firstId) selectSegment(firstId);
   });
 
-  // Render ulang tiap kali layar mode ditampilkan (progres bisa berubah
-  // selama bermain; backToModeSelection tidak tahu soal mode.js).
-  window.addEventListener('mode-screen-shown', renderSegmentPath);
+  // Render ulang + wiring ulang tiap kali layar mode ditampilkan (progres bisa
+  // berubah selama bermain; backToModeSelection tidak tahu soal mode.js).
+  // KENAPA wiring ulang di sini? Perbaikan bug popup stuck setelah pulang dari player.
+  window.addEventListener('mode-screen-shown', () => {
+    closePopup();
+    renderSegmentPath();
+    wirePopupButtons();
+  });
 }
