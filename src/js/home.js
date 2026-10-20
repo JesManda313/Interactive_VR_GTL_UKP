@@ -8,10 +8,11 @@
  * dan saat diklik -> muat skenario modul itu, cek unduhan, lalu arahkan ke layar berikutnya.
  */
 import { MODULES_URL, store } from './store.js'; // URL JSON + memori global.
-import { safeText } from './utils.js'; // escape HTML agar judul aman.
+import { safeText, showToast } from './utils.js'; // escape HTML agar judul aman.
 import { loadScenarios } from './scenario.js'; // muat scenarios.json modul terpilih.
-import { applyImageUris, applyLocalVideos, collectImageRemotes, missingRemotes, overlayImagesResolved, purgeOrphanDownloads, runDownloadFlow } from './download-manager.js'; // cek/petakan file lokal hasil unduhan.
+import { applyImageUris, applyLocalVideos, collectImageRemotes, getDownloadProgress, isDownloading, missingRemotes, overlayImagesResolved, purgeOrphanDownloads, runDownloadFlow } from './download-manager.js'; // cek/petakan file lokal hasil unduhan.
 import { backToModules, openCalibrationScreen, showScreen } from './navigation.js'; // pindah layar.
+import { confirmRemoteBeforeVr } from './remote-gate.js'; // gerbang remote BT sebelum kalibrasi VR.
 
 /**
  * loadModules():
@@ -41,7 +42,7 @@ export async function loadModules() {
  * - data-module-id KENAPA? Untuk tahu kartu mana diklik tanpa closure per modul.
  * - isCalibration ? '⌁' : '360°' KENAPA? Ikon beda agar modul setting tidak dikira materi.
  */
-export function renderModuleList() {
+export function renderModuleList(query = '') {
   const moduleList = document.getElementById('moduleList');
   if (!moduleList) return;
 
@@ -50,15 +51,34 @@ export function renderModuleList() {
     return;
   }
 
-  moduleList.innerHTML = store.modules
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? store.modules.filter((module) =>
+        [module.title, module.subtitle, module.description, module.id]
+          .filter(Boolean)
+          .some((field) => String(field).toLowerCase().includes(q)),
+      )
+    : store.modules;
+
+  if (!filtered.length) {
+    moduleList.innerHTML = `<p>Tidak ada modul yang cocok dengan "${safeText(query.trim())}".</p>`;
+    return;
+  }
+
+  moduleList.innerHTML = filtered
     .map((module, index) => {
       const isCalibration = module.type === 'calibration';
+      const prog = getDownloadProgress?.();
+      const badge = prog && prog.moduleId === module.id
+        ? `<small class="dl-badge">Mengunduh ${prog.percent}%</small>`
+        : '';
       return `
         <button class="module-card recommendation-card" data-module-id="${safeText(module.id)}" data-index="${String(index + 1).padStart(2, '0')}">
           <span class="module-card-art" aria-hidden="true">${isCalibration ? '⌁' : '360°'}</span>
           <div class="module-body">
             <strong>${safeText(module.title)}</strong>
             <p>${safeText(module.subtitle ?? module.description ?? '')}</p>
+            ${badge}
             <small>
               ${isCalibration ? 'Pengaturan mata kiri dan kanan' : `${safeText(module.totalSegments ?? '-')} segmen • ${safeText(module.totalDecisionPoints ?? '-')} decision point`}
             </small>
@@ -103,8 +123,19 @@ export async function openModule(moduleId) {
   store.activeModule = selectedModule;
 
   if (store.activeModule.type === 'calibration') {
-    openCalibrationScreen();
+    confirmRemoteBeforeVr({
+      onContinue: () => openCalibrationScreen(),
+    });
     return;
+  }
+
+  // Guard 4a: modul materi lain ditolak saat ada unduhan berjalan (kalibrasi bebas).
+  if (isDownloading()) {
+    const prog = getDownloadProgress();
+    if (prog && prog.moduleId !== selectedModule.id) {
+      showToast(`Unduhan modul lain masih berjalan (${prog.percent}%) — tunggu selesai dulu`);
+      return;
+    }
   }
 
   document.getElementById('selectedModuleTitle').textContent = store.activeModule.title;
@@ -130,8 +161,9 @@ export async function openModule(moduleId) {
   if (missing.length || missingImages.length) {
     showScreen('download');
     runDownloadFlow(store.scenarios, {
+      moduleId: selectedModule.id,
       onDone: () => showScreen('mode'), // selesai -> ke timeline.
-      onBack: () => backToModules(), // batal -> ke daftar.
+      onBack: () => backToModules(), // kembali -> detach, job lanjut background.
     });
     return;
   }
@@ -141,12 +173,25 @@ export async function openModule(moduleId) {
 
 /**
  * initHome():
- * Untuk apa? Wire tombol-tombol milik home.html (sekali saat start).
- * - #openSettingsButton -> openCalibrationScreen. KENAPA? Ikon gear di home adalah jalan pintas ke kalibrasi.
- * - ?. KENAPA optional? Agar tidak crash bila HTML berubah.
+ * Untuk apa? Wire listener milik home.html (sekali saat start).
+ * Topbar profile/settings sudah dihapus — kalibrasi hanya via kartu modul.
+ * Listener download-progress di sini untuk refresh badge progres di daftar modul.
  */
 export function initHome() {
-  document.getElementById('openSettingsButton')?.addEventListener('click', () => {
-    openCalibrationScreen();
+  const searchInput = document.getElementById('moduleSearch');
+  searchInput?.addEventListener('input', () => {
+    renderModuleList(searchInput.value);
+  });
+
+  let lastBadgeRender = 0;
+  let lastPercent = -1;
+  window.addEventListener('download-progress', (e) => {
+    if (document.getElementById('homeScreen')?.classList.contains('hidden')) return;
+    const pct = e?.detail?.percent ?? -1;
+    const now = Date.now();
+    if (pct === lastPercent || now - lastBadgeRender < 2000) return;
+    lastPercent = pct;
+    lastBadgeRender = now;
+    renderModuleList(searchInput?.value ?? '');
   });
 }

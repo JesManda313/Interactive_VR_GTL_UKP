@@ -65,4 +65,19 @@
   <div id="mobileFadeOverlay" class="fade-overlay mobile-fade-overlay">
     <div id="mobileFadeText" class="fade-message"></div>
   </div>
+
+  <!-- Panduan Mobile Mode: muncul sekali tiap masuk mode mobile, tidak mengunci player -->
+  <div id="mobileGuideModal" class="mobile-quiz-popup mode-popup-center hidden">
+    <div class="mobile-quiz-card" role="dialog" aria-modal="true" aria-labelledby="mobileGuideTitle">
+      <span class="mobile-quiz-eyebrow">Mode Mobile</span>
+      <h3 id="mobileGuideTitle">Cara memakai mode ini</h3>
+      <div class="mobile-guide-list">
+        <p><strong>Menjawab kuis:</strong> arahkan titik tengah layar (kursor) tepat ke pilihan jawaban, lalu tekan tombol <strong>kembali</strong> di HP kamu untuk memilih.</p>
+        <p><strong>Melihat sekeliling:</strong> geser / drag layar dengan jari untuk melihat sisi lain video 360&deg;.</p>
+        <p><strong>Gerak otomatis:</strong> aktifkan dan izinkan akses <strong>giroskop / sensor gerak</strong> HP &mdash; cukup miringkan atau putar HP untuk melihat sekeliling tanpa drag.</p>
+      </div>
+      <button id="mobileGuideClose" class="btn-primary" type="button">Mengerti, mulai</button>
+      <button id="mobileGuideBack" class="btn-ghost" type="button" style="width:100%;margin-top:8px">‹ Kembali ke pilih mode</button>
+    </div>
+  </div>
 </section>

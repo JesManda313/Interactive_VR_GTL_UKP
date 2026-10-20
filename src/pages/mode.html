@@ -39,4 +39,24 @@
       </div>
     </div>
   </div>
+
+  <!-- Gerbang remote Bluetooth sebelum masuk VR -->
+  <div id="remotePopup" class="mobile-quiz-popup mode-popup-center hidden">
+    <div class="mobile-quiz-card remote-card">
+      <span class="mobile-quiz-eyebrow">Sebelum masuk VR</span>
+      <h3>Pastikan remote tersambung</h3>
+      <ol class="remote-steps">
+        <li>Tekan dan tahan tombol <strong>Power</strong> remote ±3 detik sampai lampu indikator <strong>berkedip</strong>.</li>
+        <li>Buka <strong>Pengaturan → Bluetooth</strong> di HP, nyalakan Bluetooth.</li>
+        <li>Pilih perangkat berawalan <strong>SC-…</strong>, ketuk untuk pairing (PIN bila diminta: <strong>0000</strong>).</li>
+        <li>Kembali ke aplikasi lalu tekan <strong>Lanjut</strong>.</li>
+      </ol>
+      <p id="remoteDetectStatus" class="mobile-quiz-feedback"></p>
+      <label class="remote-skip"><input id="remoteSkipCheckbox" type="checkbox" /> Jangan tampilkan lagi</label>
+      <div class="mobile-quiz-options">
+        <button id="remoteContinue" class="mobile-quiz-option" type="button"><span class="opt-label">✓</span><span>Sudah tersambung, Lanjut</span></button>
+        <button id="remoteCancel" class="mobile-quiz-option" type="button"><span class="opt-label">×</span><span>Batal</span></button>
+      </div>
+    </div>
+  </div>
 </section>

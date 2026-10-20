@@ -10,6 +10,7 @@
  */
 import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
+import { showToast } from './utils.js';
 
  // TODO PILOT: kunci API key ke Android (package + SHA-1) setelah APK pilot teruji.
  // Kunci di bundle JS bisa diekstrak — restriksi adalah satu-satunya pagar.
@@ -543,7 +544,7 @@ async function downloadOneWebFetch(remote, onProgress) {
 export async function downloadMissing(scenarios, { onFile, onProgress } = {}) {
   // UNTUK APA? Mengunduh semua file unik yang kurang (video lalu gambar) berurutan dan menerapkan URI lokalnya.
   // KENAPA? Berurutan hemat memori/bandwidth; gambar jadi data-URL (ramah WebGL) sedangkan video jadi file/blob URL.
-  cancelled = false;
+  // NOTE: cancelled direset oleh startJob; jangan reset di sini (single-flight).
   // Job video: unduh -> mutasi scenario.video semua segmen pemakai.
   const jobs = [];
   for (const g of uniqueRemotes(scenarios)) {
@@ -597,6 +598,8 @@ function downloadUi() {
     fill: get('downloadFill'),
     percent: get('downloadPercent'),
     status: get('downloadStatus'),
+    start: get('downloadStart'),
+    cancel: get('downloadCancel'),
     retry: get('downloadRetry'),
     back: get('downloadBack'),
   };
@@ -612,44 +615,169 @@ function renderProgress(ui, loaded, total) {
 }
 
 /**
- * Jalankan alur download blocking untuk modul aktif.
- * onDone: dipanggil saat semua file lengkap -> lanjut ke pilih mode.
- * onBack: tombol kembali (batalkan unduhan + kembali ke daftar modul).
+ * Single-flight: hanya 1 job download boleh jalan. Back = detach (job lanjut
+ * di latar belakang), masuk lagi = attach ulang ke job yang sama.
  */
-export async function runDownloadFlow(scenarios, { onDone, onBack } = {}) {
-  // UNTUK APA? Menjalankan alur download blocking: update UI per file/progress, selesai panggil onDone, gagal tampilkan retry.
-  // KENAPA? Titik masuk layar download; tombol kembali membatalkan via flag agar berhenti di batas aman antar file.
+let activeJob = null; // { moduleId, loaded, total, percent, fileLabel }
+
+export function isDownloading() {
+  return !!activeJob;
+}
+
+export function getDownloadProgress() {
+  return activeJob ? { ...activeJob } : null;
+}
+
+function emitProgress(job) {
+  try {
+    window.dispatchEvent(new CustomEvent('download-progress', { detail: { ...job } }));
+  } catch { /* abaikan */ }
+}
+
+/**
+ * Jalankan alur download: tampilkan info + tombol Mulai, jangan auto-download.
+ * Back saat jalan = detach + toast (job lanjut background). Cancel = berhenti aman.
+ */
+export async function runDownloadFlow(scenarios, { moduleId = '', onDone, onBack } = {}) {
   const ui = downloadUi();
   if (ui.retry) ui.retry.classList.add('hidden');
+
+  // Hitung total ukuran paket untuk label awal.
+  let totalBytes = 0;
+  let fileCount = 0;
+  try {
+    for (const g of uniqueRemotes(scenarios)) {
+      if (!(await isFileReady(g.remote))) {
+        totalBytes += Number(g.remote.size) || 0;
+        fileCount += 1;
+      }
+    }
+    for (const g of collectImageRemotes(scenarios)) {
+      if (!(await isFileReady(g.remote))) {
+        totalBytes += Number(g.remote.size) || 0;
+        fileCount += 1;
+      }
+    }
+  } catch { /* label gagal -> tetap tampil tombol */ }
+
+  // Jika job modul ini sudah jalan -> attach ulang, jangan start baru.
+  if (activeJob && activeJob.moduleId === moduleId) {
+    wireAttachedMode(ui, onBack);
+    renderProgress(ui, activeJob.loaded, activeJob.total);
+    if (ui.fileInfo) ui.fileInfo.textContent = activeJob.fileLabel ?? `File • ${formatMB(totalBytes)}`;
+    if (ui.title) ui.title.textContent = 'Melanjutkan unduhan…';
+    return;
+  }
+
+  // Job modul lain jalan -> tombol Start disable, info siapa yang jalan.
+  if (activeJob && activeJob.moduleId !== moduleId) {
+    if (ui.title) ui.title.textContent = 'Ada unduhan berjalan';
+    if (ui.status) ui.status.textContent = `Modul lain mengunduh ${activeJob.percent}% — tunggu selesai dulu.`;
+    if (ui.start) ui.start.disabled = true;
+    if (ui.back) ui.back.onclick = () => onBack?.();
+    return;
+  }
+
+  if (ui.title) ui.title.textContent = 'Siap mengunduh modul';
+  if (ui.fileInfo) ui.fileInfo.textContent = `${fileCount} file • ${formatMB(totalBytes)}`;
+  if (ui.status) ui.status.textContent = 'Siap mengunduh.';
+  renderProgress(ui, 0, 1);
+  if (ui.start) {
+    ui.start.classList.remove('hidden');
+    ui.start.disabled = false;
+    ui.start.onclick = () => startJob(scenarios, { moduleId, onDone, onBack });
+  }
+  if (ui.cancel) ui.cancel.classList.add('hidden');
+  if (ui.back) ui.back.onclick = () => onBack?.();
+}
+
+function wireAttachedMode(ui, onBack) {
+  if (ui.start) ui.start.classList.add('hidden');
+  if (ui.cancel) {
+    ui.cancel.classList.remove('hidden');
+    ui.cancel.onclick = () => {
+      cancelDownloads();
+      showToast('Membatalkan unduhan…');
+    };
+  }
   if (ui.back) {
     ui.back.onclick = () => {
+      showToast('Unduhan berjalan di latar belakang');
+      onBack?.();
+    };
+  }
+  const onProg = (e) => {
+    const job = e.detail;
+    if (ui.percent) ui.percent.textContent = `${job.percent}%`;
+    if (ui.fill) ui.fill.style.width = `${job.percent}%`;
+    if (ui.status) ui.status.textContent = `${formatMB(job.loaded)} / ${formatMB(job.total)}`;
+    if (ui.fileInfo && job.fileLabel) ui.fileInfo.textContent = job.fileLabel;
+  };
+  window.addEventListener('download-progress', onProg, { once: false });
+}
+
+async function startJob(scenarios, { moduleId, onDone, onBack }) {
+  const ui = downloadUi();
+  if (activeJob) return; // guard dobel-klik / dobel flow.
+  cancelled = false;
+  activeJob = { moduleId, loaded: 0, total: 1, percent: 0, fileLabel: '' };
+  if (ui.start) ui.start.classList.add('hidden');
+  if (ui.retry) ui.retry.classList.add('hidden');
+  if (ui.cancel) {
+    ui.cancel.classList.remove('hidden');
+    ui.cancel.onclick = () => {
       cancelDownloads();
+      showToast('Membatalkan unduhan…');
+    };
+  }
+  if (ui.back) {
+    ui.back.onclick = () => {
+      showToast('Unduhan berjalan di latar belakang');
       onBack?.();
     };
   }
 
   try {
     const count = await downloadMissing(scenarios, {
-      onFile: ({ scenario, remote, fileIndex, fileCount }) => {
-        if (ui.title) ui.title.textContent = `Mengunduh: ${remote.fileName ?? scenario.title ?? 'file'}`;
-        if (ui.fileInfo) ui.fileInfo.textContent = `File ${fileIndex + 1}/${fileCount} • ${formatMB(remote.size)}`;
+      onFile: ({ remote, fileIndex, fileCount }) => {
+        if (!activeJob) return;
+        activeJob.fileLabel = `File ${fileIndex + 1}/${fileCount} • ${formatMB(remote.size)}`;
+        if (ui.title) ui.title.textContent = `Mengunduh: ${remote.fileName ?? 'file'}`;
+        if (ui.fileInfo) ui.fileInfo.textContent = activeJob.fileLabel;
         if (ui.retry) ui.retry.classList.add('hidden');
+        emitProgress(activeJob);
       },
-      onProgress: ({ loaded, total }) => renderProgress(ui, loaded, total),
+      onProgress: ({ loaded, total }) => {
+        if (!activeJob) return;
+        activeJob.loaded = loaded;
+        activeJob.total = total || 1;
+        activeJob.percent = Math.round(Math.min(100, (loaded / activeJob.total) * 100));
+        renderProgress(ui, loaded, total);
+        emitProgress(activeJob);
+      },
     });
+    activeJob = null;
     if (count === 0) {
       onDone?.();
       return;
     }
+    showToast('Unduhan selesai');
     if (ui.status) ui.status.textContent = 'Unduhan selesai. Membuka modul…';
     window.setTimeout(() => onDone?.(), 600);
   } catch (error) {
-    if (String(error?.message) === 'dibatalkan') return;
+    activeJob = null;
+    if (String(error?.message) === 'dibatalkan') {
+      renderProgress(ui, 0, 1);
+      if (ui.status) ui.status.textContent = 'Unduhan dibatalkan.';
+      runDownloadFlow(scenarios, { moduleId, onDone, onBack });
+      return;
+    }
     console.warn('Unduhan gagal:', error);
     if (ui.status) ui.status.textContent = `Gagal: ${error?.message ?? error}`;
+    if (ui.cancel) ui.cancel.classList.add('hidden');
     if (ui.retry) {
       ui.retry.classList.remove('hidden');
-      ui.retry.onclick = () => runDownloadFlow(scenarios, { onDone, onBack });
+      ui.retry.onclick = () => runDownloadFlow(scenarios, { moduleId, onDone, onBack });
     }
   }
 }
