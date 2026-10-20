@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">GTL VR Learning</string>
-    <string name="title_activity_main">GTL VR Learning</string>
+    <string name="app_name">Petra DentalVR</string>
+    <string name="title_activity_main">Petra DentalVR</string>
     <string name="package_name">id.ac.petra.gtlvr</string>
     <string name="custom_url_scheme">id.ac.petra.gtlvr</string>
 </resources>
