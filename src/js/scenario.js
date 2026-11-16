@@ -1,8 +1,13 @@
 /**
- * scenario.js — scenario & quiz engine.
+ * scenario.js — scenario & quiz engine (controller).
  * Dipakai mobile-player.html + vr-player.html.
- * Quiz digabung di sini karena saling memanggil dengan engine
- * (handleOption -> renderActiveScenario -> showQuiz -> handleOption).
+ *
+ * File ini tetap memegang alur utama (handleOption -> renderActiveScenario ->
+ * showQuiz -> handleOption). Bagian yang lepas dipindah ke modul khusus:
+ * - scenario-state.js       : selector state skenario
+ * - scenario-orientation.js : lock landscape / hint rotate
+ * - scenario-overlays.js    : overlay terjadwal
+ * - scenario-quiz-ui.js     : popup + status visual kuis
  */
 import { store } from './store.js';
 import { applyCalibrationTarget } from './calibration.js';
@@ -19,12 +24,19 @@ import {
   getTransitionMessage,
   setFadeMessage,
 } from './fade.js';
-import { buildSceneHtml, listOverlayImages } from './scene-builders.js';
-import { ScreenOrientation } from '@capacitor/screen-orientation';
+import { buildSceneHtml } from './scene-builders.js';
+import { getActiveScenario, isFlatScenario } from './scenario-state.js';
+import { lockLandscape, tryFlatLandscape, exitFlatLandscape} from './scenario-orientation.js';
+import { attachTimedOverlays, detachTimedOverlays, hideTimedOverlays, } from './scenario-overlays.js';
+import { renderMobileQuizPopup, resetOptionStates, setFeedback, colorSelectedOptions, } from './scenario-quiz-ui.js';
+// import { testOnTap,  testOnFeedbackPrepared,  testOnRenderStart,  testOnRenderReady,  testOnVideoStart,} from '../testing/instrument.js'; // (dinonaktifkan sementara)
+
+export { getActiveScenario, isFlatScenario };
+export { lockLandscape, unlockOrientation } from './scenario-orientation.js';
+export { hideTimedOverlays };
+export { resetOptionStates, setFeedback, colorSelectedOptions };
 
 // Handler navigasi (backToModules / backToModeSelection) didaftarkan oleh
-// navigation.js via setNavHandlers — agar modul ini tidak import navigation
-// (hindari circular import).
 let navHandlers = null;
 
 // setNavHandlers: UNTUK APA? Menyimpan callback navigasi (backToModules/backToModeSelection) dari navigation.js.
@@ -33,9 +45,8 @@ export function setNavHandlers(handlers) {
   navHandlers = handlers;
 }
 
-/** Ambil skenario untuk modul dan buat peta (Map) yang diindeks oleh id skenario. */
-// loadScenarios: UNTUK APA? Fetch scenarios.json lalu isi store.scenarios/Map + set skenario pertama aktif.
-// KENAPA? Peta Map membuat lompatan next/returnTo/consequence O(1) tanpa search array tiap navigasi.
+
+//Fetch scenarios.json lalu isi store.scenarios/Map + set skenario pertama aktif.
 export async function loadScenarios(scenarioUrl) {
   const response = await fetch(scenarioUrl);
 
@@ -48,27 +59,7 @@ export async function loadScenarios(scenarioUrl) {
   store.activeScenarioId = store.scenarios[0]?.id ?? null;
 }
 
-/** Kembalikan objek skenario aktif berdasarkan `activeScenarioId`. */
-// getActiveScenario: UNTUK APA? Getter tunggal untuk segmen yang sedang tampil.
-// KENAPA? Satu pintu akses mencegah id dan Map tidak sinkron tersebar di banyak file.
-export function getActiveScenario() {
-  return store.scenarioMap.get(store.activeScenarioId);
-}
-
-/**
- * TRUE jika skenario memakai video flat (projection: flat):
- * video tampil langsung fullscreen HP, tanpa videosphere/bioskop.
- * Selain itu (360 / kosong) dianggap 360.
- */
-// isFlatScenario: UNTUK APA? Penentu cabang render flat (video <video>) vs 360 (A-Frame videosphere).
-// KENAPA? Satu fungsi dipakai render + overlay + quiz agar keputusan konsisten (termasuk alias 2d/rectilinear).
-export function isFlatScenario(scenario) {
-  if (!scenario) return false;
-  const projection = String(scenario.projection ?? scenario.videoType ?? '').toLowerCase();
-  return projection === 'flat' || projection === '2d' || projection === 'rectilinear';
-}
-
-/** Sembunyikan gerbang START VR di kedua mata (dipakai saat kuis langsung tampil). */
+/** Sembunyikan gerbang START VR di kedua mata saat setelah pencet tombol start */
 // hideVrStartGate: UNTUK APA? Set visible=false semua .vr-start-gate tanpa memutar video.
 // KENAPA? Dipakai saat kembali dari konsekuensi (kuis langsung tampil, video sudah habis).
 function hideVrStartGate() {
@@ -94,345 +85,6 @@ export function startVrPlayback() {
 export function hideMobilePopups() {
   document.getElementById('mobileQuizPopup')?.classList.add('hidden');
   document.getElementById('mobileEndPopup')?.classList.add('hidden');
-}
-
-/* ---------- Landscape khusus video flat (Sony A6400) ---------- */
-
-/** TRUE jika layar sedang portrait. */
-// isPortraitNow: UNTUK APA? Deteksi orientasi portrait via matchMedia (fallback perbandingan tinggi/lebar).
-// KENAPA? Dipakai updateRotateHintVisibility agar hint "putar HP" hanya muncul saat dibutuhkan.
-function isPortraitNow() {
-  if (window.matchMedia) {
-    return window.matchMedia('(orientation: portrait)').matches;
-  }
-  return window.innerHeight >= window.innerWidth;
-}
-
-/** Tampilkan/sembunyikan hint "putar HP" (hanya saat flat aktif + portrait). */
-// updateRotateHintVisibility: UNTUK APA? Toggle hint rotate hanya bila wrap flat terlihat + portrait.
-// KENAPA? Hint yang selalu muncul mengganggu; syarat ganda menjaga UX fullscreen Sony A6400.
-function updateRotateHintVisibility() {
-  const wrap = document.getElementById('mobileFlatWrap');
-  const hint = document.getElementById('mobileRotateHint');
-  if (!wrap || !hint) return;
-  const flatActive = !wrap.classList.contains('hidden');
-  hint.classList.toggle('hidden', !(flatActive && isPortraitNow()));
-}
-
-/** Coba kunci ke landscape via plugin native (APK) dulu, fallback Web API (browser).
- * Dipakai flat (Sony) + VR (split kiri-kanan butuh landscape). */
-export async function lockLandscape() {
-  try {
-    await ScreenOrientation.lock({ orientation: 'landscape' });
-    return 'native';
-  } catch { /* bukan APK / ditolak — lanjut fallback */ }
-  try {
-    if (screen.orientation?.lock) {
-      await screen.orientation.lock('landscape');
-      return 'web';
-    }
-  } catch { /* butuh gesture / tidak didukung */ }
-  return 'gagal';
-}
-
-/** Buka kunci orientasi (native + web), abaikan bila tidak didukung. */
-export async function unlockOrientation() {
-  try {
-    await ScreenOrientation.unlock();
-  } catch { /* abaikan */ }
-  try {
-    if (screen.orientation?.unlock) screen.orientation.unlock();
-  } catch { /* abaikan */ }
-}
-
-/** Coba kunci ke landscape (tanpa fullscreen; gagal diam-diam kalau belum ada gesture). */
-// tryFlatLandscape: UNTUK APA? Percobaan auto-lock landscape tiap masuk segmen flat.
-// KENAPA? Browser butuh gesture user; gagal diam-diam lalu hint putar-HP jadi fallback (tidak crash).
-async function tryFlatLandscape() {
-  updateRotateHintVisibility();
-  await lockLandscape();
-  updateRotateHintVisibility();
-}
-
-/** Tombol ⛶ dihapus: lock landscape hanya otomatis saat masuk segmen (butuh
- * gesture, boleh gagal diam-diam); user memutar HP manual via auto-rotate. */
-
-/** Keluar dari landscape: unlock + keluar fullscreen. */
-// exitFlatLandscape: UNTUK APA? Bersihkan lock orientasi + fullscreen + hint saat pindah ke 360/VR.
-// KENAPA? Tanpa cleanup, HP terkunci landscape dan hint nyangkut di scene yang tidak butuh.
-function exitFlatLandscape() {
-  unlockOrientation();
-  try {
-    if (document.fullscreenElement) document.exitFullscreen()?.catch?.(() => {});
-    else if (document.webkitFullscreenElement) document.webkitExitFullscreen?.();
-  } catch { /* abaikan */ }
-  document.getElementById('mobileRotateHint')?.classList.add('hidden');
-}
-
-if (typeof window !== 'undefined') {
-  window.addEventListener('orientationchange', () => {
-    setTimeout(updateRotateHintVisibility, 120);
-  });
-  window.addEventListener('resize', () => {
-    updateRotateHintVisibility();
-  });
-  document.addEventListener('fullscreenchange', () => {
-    updateRotateHintVisibility();
-  });
-  document.addEventListener('webkitfullscreenchange', () => {
-    updateRotateHintVisibility();
-  });
-}
-
-/** Render popup branching HTML di depan video flat. */
-// renderMobileQuizPopup: UNTUK APA? Bangun tombol opsi HTML di atas video flat + bind klik ke handleOption.
-// KENAPA? Mode flat tanpa A-Frame jadi kuis harus DOM; escape "<" mencegah injeksi dari scenarios.json.
-function renderMobileQuizPopup(scenario) {
-  const popup = document.getElementById('mobileQuizPopup');
-  const questionEl = document.getElementById('mobileQuizQuestion');
-  const optionsEl = document.getElementById('mobileQuizOptions');
-  const feedbackEl = document.getElementById('mobileQuizFeedback');
-  if (!popup || !questionEl || !optionsEl) return;
-
-  document.getElementById('mobileEndPopup')?.classList.add('hidden');
-  questionEl.textContent = scenario.question ?? '-';
-  if (feedbackEl) {
-    feedbackEl.textContent = 'Pilih salah satu jawaban.';
-    feedbackEl.className = 'mobile-quiz-feedback';
-  }
-
-  optionsEl.innerHTML = (scenario.options ?? [])
-    .map((option, index) => {
-      const label = String(option.label ?? String.fromCharCode(65 + index)).replace(/</g, '&lt;');
-      const text = String(option.text ?? '').replace(/</g, '&lt;');
-      return `
-        <button
-          type="button"
-          class="mobile-quiz-option"
-          data-option-index="${index}"
-          data-next="${String(option.next ?? '')}"
-          data-consequence="${String(option.consequence ?? '')}"
-          data-correct="${option.correct ? 'true' : 'false'}"
-        ><span class="opt-label">${label}</span><span>${text}</span></button>
-      `;
-    })
-    .join('');
-
-  optionsEl.querySelectorAll('.mobile-quiz-option').forEach((button) => {
-    button.addEventListener('click', () => handleOption(button));
-  });
-
-  popup.classList.remove('hidden');
-}
-
-/* ---------- Timed overlay (teks/gambar pada detik tertentu) ----------
- * Data: scenario.overlays = [{ id, start, end (null = sampai habis),
- *   kind: 'text'|'image', text, image, localImage, caption,
- *   images: [{ image, imageRemote, localImage, x, y, w }] (multi + koordinat
- *     manual meter; x,y null = otomatis berdampingan; w null = default),
- *   pos3d: [x, y, z] opsional (posisi bebas entity, video 360 mobile + VR),
- *   textX/textY opsional (offset teks lokal entity, video 360 mobile + VR),
- *   rot: [x, y, z] derajat opsional (putaran teks + kotaknya, video 360),
- *   \n manual di text/caption untuk pecah baris (maks 2 baris disarankan),
- *   size: 'normal'|'besar'|'judul', pos: 'bawah'|'atas' }].
- * Mobile-flat: kartu DOM transparan (#mobileTimedOverlay + #mobileTimedImgs).
- * 360/VR: entity 3D per overlay (lihat buildTimedOverlaysHtml). */
-let timedOverlayGen = 0;
-let timedHandlers = [];
-const dismissedTimedIds = new Set();
-let activeTimedId = null;
-
-/** Sembunyikan semua kartu overlay terjadwal (mobile + kedua mata VR). */
-// hideTimedOverlays: UNTUK APA? Sembunyikan kartu DOM + entity 3D .timed-overlay dan reset activeTimedId.
-// KENAPA? Dipanggil tiap ganti segmen/quiz agar overlay lama tidak menumpuk di layar baru.
-export function hideTimedOverlays() {
-  document.getElementById('mobileTimedOverlay')?.classList.add('hidden');
-  document.querySelectorAll('.timed-overlay').forEach((el) => {
-    try {
-      el.setAttribute('visible', 'false');
-    } catch { /* abaikan */ }
-  });
-  activeTimedId = null;
-}
-
-/** Lepas semua listener timeupdate overlay (dipanggil tiap ganti segmen). */
-// detachTimedOverlays: UNTUK APA? Naikkan generasi + removeEventListener timeupdate + reset dismissed/active.
-// KENAPA? Generasi mencegah callback video lama melukis overlay segmen baru (balapan async ganti segmen).
-function detachTimedOverlays() {
-  timedOverlayGen += 1;
-  timedHandlers.forEach(({ video, fn }) => {
-    try {
-      video.removeEventListener('timeupdate', fn);
-    } catch { /* abaikan */ }
-  });
-  timedHandlers = [];
-  dismissedTimedIds.clear();
-  hideTimedOverlays();
-}
-
-/** Root scene 3D yang menampung entity overlay (VR dua mata / mobile-360). */
-// timed3dRoots: UNTUK APA? Kembalikan daftar root 3D: kiri+kanan saat VR, satu mount saat mobile-360.
-// KENAPA? Overlay 3D harus dilukis di kedua mata VR agar stereoskopis, cukup satu di mobile.
-function timed3dRoots() {
-  if (store.activeMode === 'vr') {
-    return [document.getElementById('vrLeftMount'), document.getElementById('vrRightMount')].filter(Boolean);
-  }
-  const mount = document.getElementById('mobileSceneMount');
-  return mount ? [mount] : [];
-}
-
-/** TRUE bila overlay tampil sebagai kartu DOM (hanya mobile-flat). */
-// useDomTimedCard: UNTUK APA? Saklar jalur render overlay: kartu DOM vs entity 3D.
-// KENAPA? Flat tidak punya scene A-Frame sehingga teks/gambar harus kartu HTML transparan.
-function useDomTimedCard(scenario) {
-  return store.activeMode === 'mobile' && !!scenario && isFlatScenario(scenario);
-}
-
-/** Isi + tampilkan satu overlay: kartu DOM transparan (flat) atau entity 3D. */
-// paintTimedOverlay: UNTUK APA? Dispatcher: kartu DOM bila flat, toggle visible entity 3D bila 360/VR.
-// KENAPA? Hanya satu overlay yang visible agar teks tidak bertumpuk; simpan activeTimedId anti lukis ulang.
-function paintTimedOverlay(overlay, scenario) {
-  if (useDomTimedCard(scenario)) {
-    paintDomTimedOverlay(overlay);
-    activeTimedId = overlay.id ?? null;
-    return;
-  }
-
-  const id = overlay.id ?? '';
-  timed3dRoots().forEach((root) => {
-    root.querySelectorAll('.timed-overlay').forEach((el) => {
-      try {
-        el.setAttribute('visible', el.dataset.overlayId === String(id) ? 'true' : 'false');
-      } catch { /* abaikan */ }
-    });
-  });
-  activeTimedId = overlay.id ?? null;
-}
-
-/** Kartu DOM flat: teks putih tanpa kotak, di strip bawah bingkai video. */
-// escapeItalicHtml: UNTUK APA? Escape &, <, >, " sebelum disisipkan sebagai innerHTML.
-// KENAPA? Mencegah XSS/HTML rusak dari teks scenarios.json sekaligus menjaga penanda *italic* aman.
-function escapeItalicHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-/** Ubah penanda *...* di scenarios.json menjadi <i>...</i> (sudah di-escape). */
-// richItalic: UNTUK APA? Konversi *kata Inggris* menjadi tag <i> setelah escape.
-// KENAPA? Penulis konten cukup tulis *...* tanpa HTML mentah; regex hindari \n agar baris aman.
-function richItalic(raw) {
-  return escapeItalicHtml(raw).replace(/\*([^*\n]+)\*/g, '<i>$1</i>');
-}
-
-/** Isi elemen <p> overlay dengan dukungan italic Inggris. */
-// paintItalicText: UNTUK APA? Isi <p> kartu DOM via richItalic (innerHTML aman).
-// KENAPA? Dibungkus fungsi agar pemakaian kartu DOM konsisten dan guard el kosong anti crash.
-function paintItalicText(el, raw) {
-  if (!el) return;
-  el.innerHTML = richItalic(raw ?? '');
-}
-
-// paintDomTimedOverlay: UNTUK APA? Render kartu DOM flat: kelas posisi/ukuran + gambar + teks/caption.
-// KENAPA? Satu fungsi menampung varian pos (atas/bawah) dan size agar tampilan responsif tanpa kotak.
-function paintDomTimedOverlay(overlay) {
-  const box = document.getElementById('mobileTimedOverlay');
-  if (!box) return;
-
-  box.classList.remove('hidden', 'pos-atas', 'pos-bawah', 'sz-besar', 'sz-judul');
-  box.classList.add('style-flat', overlay.pos === 'atas' ? 'pos-atas' : 'pos-bawah');
-  if (overlay.size === 'besar') box.classList.add('sz-besar');
-  if (overlay.size === 'judul') box.classList.add('sz-judul');
-  // Render semua gambar (multi + koordinat manual diabaikan di DOM:
-  // tampil berdampingan responsif).
-  const wrap = box.querySelector('#mobileTimedImgs');
-  if (wrap) {
-    wrap.innerHTML = '';
-    for (const im of listOverlayImages(overlay)) {
-      if (!im.src) continue;
-      const el = document.createElement('img');
-      el.src = im.src;
-      el.alt = '';
-      el.className = 'mobile-timed-img';
-      wrap.appendChild(el);
-    }
-  }
-  const txt = box.querySelector('p');
-  if (txt) paintItalicText(txt, overlay.kind === 'image' ? (overlay.caption ?? '') : (overlay.text ?? ''));
-}
-
-/** Cek posisi video terhadap semua jendela overlay skenario aktif. */
-// tickTimedOverlays: UNTUK APA? Dipanggil tiap timeupdate: cari overlay yang jendelanya memuat currentTime lalu lukis.
-// KENAPA? Guard generasi + skenario aktif mencegah callback basi; dismissed memungkinkan tombol X menutup sekali.
-function tickTimedOverlays(video, scenario, gen) {
-  if (gen !== timedOverlayGen) return;
-  const current = getActiveScenario();
-  if (!current || current !== scenario) return;
-  const t = Number(video.currentTime);
-  if (!Number.isFinite(t)) return;
-
-  const list = Array.isArray(scenario.overlays) ? scenario.overlays : [];
-  const hit = list.find((o) => {
-    const start = Number(o.start ?? 0);
-    const end = o.end == null ? Infinity : Number(o.end);
-    return t >= start && t <= end && !dismissedTimedIds.has(o.id);
-  });
-
-  if (!hit) {
-    // Keluar jendela: izinkan tampil lagi bila masuk kembali (seek ulang).
-    list.forEach((o) => {
-      const start = Number(o.start ?? 0);
-      const end = o.end == null ? Infinity : Number(o.end);
-      if (t < start || t > end) dismissedTimedIds.delete(o.id);
-    });
-    hideTimedOverlays();
-    return;
-  }
-
-  if (hit.id !== activeTimedId) paintTimedOverlay(hit, scenario);
-}
-
-/** Pasang timeupdate pada video aktif + preload gambar overlay. */
-// attachTimedOverlays: UNTUK APA? Reset lama, preload gambar, lalu pasang listener timeupdate ke video yang tepat.
-// KENAPA? Pilih target (VR bersama / flat / videosphere) agar overlay sinkron; preload cegah gambar telat muncul.
-function attachTimedOverlays(scenario) {
-  detachTimedOverlays();
-  const list = Array.isArray(scenario?.overlays) ? scenario.overlays : [];
-  if (!list.length) return;
-  const gen = timedOverlayGen;
-
-  // Preload agar muncul tepat waktu (semua gambar, termasuk array multi).
-  list.forEach((o) => {
-    for (const im of listOverlayImages(o)) {
-      if (!im.src) continue;
-      try {
-        const pre = new Image();
-        pre.src = im.src;
-      } catch { /* abaikan */ }
-    }
-  });
-
-  const videos = store.activeMode === 'vr'
-    ? [document.getElementById('sharedVrVideo')].filter(Boolean)
-    : store.activeMode === 'mobile' && scenario && isFlatScenario(scenario)
-      ? [document.getElementById('mobileFlatVideo')].filter(Boolean)
-      : [...document.querySelectorAll('#mobileSceneMount .scenario-video')];
-
-  videos.forEach((video) => {
-    const fn = () => tickTimedOverlays(video, scenario, gen);
-    video.addEventListener('timeupdate', fn);
-    timedHandlers.push({ video, fn });
-  });
-
-  const closeBtn = document.getElementById('mobileTimedClose');
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      if (activeTimedId) dismissedTimedIds.add(activeTimedId);
-      hideTimedOverlays();
-    };
-  }
 }
 
 /** Render scene 360 mobile (A-Frame videosphere) — perilaku lama. */
@@ -543,7 +195,10 @@ export function bindSceneEvents(root) {
   const options = root.querySelectorAll('.quiz-option');
 
   options.forEach((option) => {
-    option.addEventListener('click', () => handleOption(option));
+    option.addEventListener('click', (event) => {
+      // testOnTap(event); // (dinonaktifkan sementara)
+      handleOption(option);
+    });
 
     option.addEventListener('mouseenter', () => {
       const bg = option.querySelector('.option-bg');
@@ -576,10 +231,216 @@ export function bindSceneEvents(root) {
   // Gerbang START VR: klik mouse/touch sebagai fallback uji laptop
   // (di HP VR pemicunya tatap + tombol remote via gaze.js).
   root.querySelectorAll('.vr-start-gate').forEach((gate) => {
-    gate.addEventListener('click', () => {
+    gate.addEventListener('click', (event) => {
+      // testOnVideoStart(event); // (dinonaktifkan sementara)
       startVrPlayback();
     });
   });
+}
+
+/* ------------------------------------------------------------------ */
+/* Auto-fit kuis VR                                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Ukur ukuran nyata blok <a-text> (sudah termasuk scale elemen).
+ * Dipakai agar background opsi bisa mengikuti panjang/tinggi teks.
+ */
+function measureTextBlock(textEl) {
+  const text = textEl?.components?.text;
+  const font = text?.currentFont;
+  const layout = text?.geometry?.layout;
+
+  if (!text || !font || !layout || !text.geometry || !text.mesh) {
+    return null;
+  }
+
+  const wrapPixels = text.data.wrapPixels
+    || (0.5 + text.data.wrapCount) * font.widthFactor;
+  const textScale = (text.data.width || 1) / wrapPixels;
+
+  if (!Number.isFinite(textScale) || textScale <= 0) {
+    return null;
+  }
+
+  // Lebar baris terpanjang diambil dari bounding box mesh teks (layout.width
+  // selalu sama dengan lebar wrap, bukan lebar teks sesungguhnya).
+  text.geometry.computeBoundingBox();
+  const box = text.geometry.boundingBox;
+  const rawWidth = box
+    ? (box.max.x - box.min.x) * textScale
+    : layout.width * textScale;
+  const rawHeight = (layout.height + layout.descender) * textScale;
+
+  const elementScale = textEl.object3D?.scale;
+  const scaleX = Math.abs(elementScale?.x || 1);
+  const scaleY = Math.abs(elementScale?.y || 1);
+
+  return {
+    width: Math.max(0.1, rawWidth * scaleX),
+    height: Math.max(0.05, rawHeight * scaleY),
+  };
+}
+
+/**
+ * Susun ulang opsi kuis VR: background mengikuti teks, opsi disusun horizontal,
+ * dan panel ikut meninggi bila isinya tidak muat.
+ * @returns {boolean} false bila font/layout belum siap (perlu dicoba lagi).
+ */
+function applyVrQuizLayout(panel, options) {
+  const panelBg = panel.querySelector('.quiz-panel-bg');
+  const panelAccent = panel.querySelector('.quiz-panel-accent');
+  const titleEl = panel.querySelector('.quiz-panel-title');
+  const questionEl = panel.querySelector('.quiz-question-text');
+  const feedbackEl = panel.querySelector('.feedback-text');
+
+  if (!panelBg) {
+    return false;
+  }
+
+  const measured = [];
+
+  for (const option of options) {
+    const textEl = option.querySelector('.quiz-option-text');
+    const bg = option.querySelector('.option-bg');
+    const dims = measureTextBlock(textEl);
+
+    if (!bg || !dims) {
+      return false;
+    }
+
+    // Padding + ukuran minimum supaya kotak tetap nyaman jadi target gaze.
+    const width = Math.max(1.1, dims.width + 0.34);
+    const height = Math.max(0.5, dims.height + 0.24);
+
+    bg.setAttribute('width', width.toFixed(3));
+    bg.setAttribute('height', height.toFixed(3));
+    measured.push({ option, width, height });
+  }
+
+  const titleDims = titleEl ? measureTextBlock(titleEl) : null;
+  const questionDims = questionEl ? measureTextBlock(questionEl) : null;
+  const feedbackDims = feedbackEl ? measureTextBlock(feedbackEl) : null;
+
+  if ((titleEl && !titleDims) || (questionEl && !questionDims) || (feedbackEl && !feedbackDims)) {
+    return false;
+  }
+
+  const baseWidth = Number(panel.dataset.baseWidth)
+    || Number(panelBg.getAttribute('width'))
+    || 2.5;
+  const baseHeight = Number(panel.dataset.baseHeight)
+    || Number(panelBg.getAttribute('height'))
+    || 2.35;
+  const optionGap = 0.12;
+  const optionsWidth = measured.reduce((total, item) => total + item.width, 0)
+    + optionGap * Math.max(0, measured.length - 1);
+  const contentWidths = [
+    optionsWidth,
+    titleDims?.width ?? 0,
+    questionDims?.width ?? 0,
+    feedbackDims?.width ?? 0,
+  ];
+  const panelWidth = Math.max(baseWidth, Math.max(...contentWidths) + 0.5);
+  panelBg.setAttribute('width', panelWidth.toFixed(3));
+  panelAccent?.setAttribute('width', panelWidth.toFixed(3));
+
+  const questionY = 0.62;
+  const gapY = 0.12;
+  const optionsHeight = Math.max(...measured.map(({ height }) => height));
+  const optionsY = questionY
+    - (questionDims ? questionDims.height : 0.22) / 2
+    - gapY
+    - optionsHeight / 2;
+  let cursorX = -optionsWidth / 2;
+
+  measured.forEach(({ option, width }) => {
+    const x = cursorX + width / 2;
+    option.setAttribute('position', `${x.toFixed(3)} ${optionsY.toFixed(3)} 0.04`);
+    cursorX += width + optionGap;
+  });
+
+  const optionsBottom = optionsY - optionsHeight / 2;
+  const feedbackHeight = feedbackDims?.height ?? 0;
+  const feedbackY = optionsBottom - gapY - feedbackHeight / 2;
+
+  if (feedbackEl) {
+    feedbackEl.setAttribute('position', `0 ${feedbackY.toFixed(3)} 0.03`);
+  }
+
+  // Sediakan ruang untuk judul/pertanyaan di atas dan feedback di bawah.
+  const topEdge = Math.max(
+    baseHeight / 2,
+    1.2 + (titleDims?.height ?? 0) / 2 + 0.08,
+    questionY + (questionDims?.height ?? 0) / 2 + 0.12,
+  );
+  const feedbackBottom = feedbackY - feedbackHeight / 2;
+  const requiredHeight = topEdge - feedbackBottom + 0.2;
+  const panelHeight = Math.max(baseHeight, requiredHeight);
+
+  panelBg.setAttribute('height', panelHeight.toFixed(3));
+  panelBg.setAttribute(
+    'position',
+    `0 ${(topEdge - panelHeight / 2).toFixed(3)} 0`,
+  );
+
+  return true;
+}
+
+/**
+ * Pasang auto-fit kuis VR. Font A-Frame dimuat asinkron, jadi tunggu
+ * textfontset lalu ukur ulang (dengan beberapa kali percobaan cadangan).
+ */
+function fitVrQuizLayout(root) {
+  const panel = root?.querySelector?.('.quiz-panel-vr');
+
+  if (!panel) {
+    return;
+  }
+
+  const options = [...panel.querySelectorAll('.quiz-option')];
+
+  if (!options.length) {
+    return;
+  }
+
+  let attempts = 0;
+  let retryTimer = null;
+  let done = false;
+
+  const run = () => {
+    retryTimer = null;
+
+    if (done) {
+      return;
+    }
+
+    if (applyVrQuizLayout(panel, options)) {
+      done = true;
+      return;
+    }
+
+    attempts += 1;
+
+    if (attempts < 40) {
+      retryTimer = window.setTimeout(run, 250);
+    }
+  };
+
+  panel.querySelectorAll(
+    '.quiz-option-text, .quiz-question-text, .quiz-panel-title, .feedback-text',
+  ).forEach((textEl) => {
+    const text = textEl.components?.text;
+
+    if (text?.currentFont && text?.geometry?.layout) {
+      window.setTimeout(run, 0);
+      return;
+    }
+
+    textEl.addEventListener('textfontset', run, { once: true });
+  });
+
+  run();
 }
 
 /**
@@ -711,71 +572,15 @@ export function showQuiz() {
   // Mobile + video flat (Sony A6400): popup HTML di depan video.
   if (store.activeMode === 'mobile' && isFlatScenario(currentScenario)) {
     pauseActiveVideos();
-    renderMobileQuizPopup(currentScenario);
+    renderMobileQuizPopup(currentScenario, (event, button) => {
+      // testOnTap(event); // (dinonaktifkan sementara)
+      handleOption(button);
+    });
     return;
   }
 
   document.querySelectorAll('.quiz-panel').forEach((panel) => {
     panel.setAttribute('visible', 'true');
-  });
-}
-
-/** Reset status visual semua opsi kuis (hapus seleksi dan set warna default). */
-// resetOptionStates: UNTUK APA? Kembalikan semua opsi 3D + HTML ke netral sebelum penilaian baru.
-// KENAPA? Dipanggil awal handleOption agar warna/selected jawaban lama tidak terbawa ke soal berikutnya.
-export function resetOptionStates() {
-  document.querySelectorAll('.quiz-option').forEach((option) => {
-    option.dataset.selected = '';
-
-    const bg = option.querySelector('.option-bg');
-
-    if (bg) {
-      bg.setAttribute('color', '#6f9fbd');
-    }
-  });
-
-  document.querySelectorAll('.mobile-quiz-option').forEach((option) => {
-    option.classList.remove('correct', 'wrong');
-    option.disabled = false;
-  });
-}
-
-/** Tampilkan pesan umpan balik di panel kuis (teks + warna). */
-// setFeedback: UNTUK APA? Tulis pesan benar/salah ke teks 3D + popup HTML mobile.
-// KENAPA? Guard popup hidden agar pesan lama tidak menimpa popup yang sedang tertutup; warna kuning default netral.
-export function setFeedback(message, color = '#fef08a') {
-  document.querySelectorAll('.feedback-text').forEach((text) => {
-    text.setAttribute('value', message);
-    text.setAttribute('color', color);
-  });
-
-  const mobileFeedback = document.getElementById('mobileQuizFeedback');
-  if (mobileFeedback && !document.getElementById('mobileQuizPopup')?.classList.contains('hidden')) {
-    mobileFeedback.textContent = message;
-    mobileFeedback.className = `mobile-quiz-feedback${color === '#bbf7d0' ? ' good' : color === '#fecaca' ? ' bad' : ''}`;
-  }
-}
-
-/** Beri warna pada opsi yang dipilih: hijau jika benar, merah jika salah. */
-// colorSelectedOptions: UNTUK APA? Tandai opsi terpilih (hijau benar / merah salah) di 3D + HTML lalu kunci HTML.
-// KENAPA? Kunci disabled mencegah tap dobel selama jeda 1200ms sebelum navigasi segmen berikutnya.
-export function colorSelectedOptions(index, correct) {
-  document.querySelectorAll(`.quiz-option[data-option-index="${index}"]`).forEach((option) => {
-    option.dataset.selected = 'true';
-
-    const bg = option.querySelector('.option-bg');
-
-    if (bg) {
-      bg.setAttribute('color', correct ? '#16a34a' : '#dc2626');
-    }
-  });
-
-  document.querySelectorAll(`.mobile-quiz-option[data-option-index="${index}"]`).forEach((option) => {
-    option.classList.add(correct ? 'correct' : 'wrong');
-  });
-  // Kunci semua opsi HTML agar tidak bisa tap dobel selama transisi.
-  document.querySelectorAll('.mobile-quiz-option').forEach((option) => {
-    option.disabled = true;
   });
 }
 
@@ -800,6 +605,8 @@ export function handleOption(optionEntity) {
       : 'Jawaban salah. Tampilkan konsekuensi, lalu kembali ke pertanyaan.',
     correct ? '#bbf7d0' : '#fecaca'
   );
+
+  // testOnFeedbackPrepared(); // (dinonaktifkan sementara)
 
   window.setTimeout(() => {
     if (consequenceScenario && store.scenarioMap.has(consequenceScenario)) {
@@ -828,6 +635,8 @@ export async function renderActiveScenario() {
   if (!scenario) {
     return;
   }
+
+  // testOnRenderStart(); // (dinonaktifkan sementara)
 
   // Batalkan timer auto-kembali yang tertunda (mis. user pindah segmen manual).
   if (endRedirectTimer) {
@@ -881,6 +690,8 @@ export async function renderActiveScenario() {
 
     bindSceneEvents(vrLeftMount);
     bindSceneEvents(vrRightMount);
+    fitVrQuizLayout(vrLeftMount);
+    fitVrQuizLayout(vrRightMount);
     if (!showGate) hideVrStartGate();
     applyCalibrationTarget('vr');
     // Layar split kiri-kanan butuh landscape: kunci otomatis (gagal diam-diam di browser).
@@ -897,6 +708,8 @@ export async function renderActiveScenario() {
 
   // Pasang overlay terjadwal (teks/gambar detik tertentu) ke video aktif.
   attachTimedOverlays(scenario);
+
+  // testOnRenderReady(); // (dinonaktifkan sementara)
 
   if (store.shouldShowQuizImmediately) {
     setTimeout(() => {
