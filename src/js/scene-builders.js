@@ -8,8 +8,8 @@ import { safeText } from './utils.js';
  * TRUE jika skenario memakai video flat (projection: flat): tampil sebagai
  * layar datar (fullscreen HP di mobile, layar bioskop di VR), BUKAN videosphere.
  * Tanpa projection (atau 360) dianggap 360.
- * Duplikasi logika isFlatScenario() dari scenario.js secara sengaja untuk
- * menghindari circular import (scenario.js mengimpor modul ini).
+ * Duplikasi logika isFlatScenario() secara sengaja agar modul pembangun scene
+ * tidak perlu mengimpor state/controller skenario.
  */
 export function isFlatVideo(scenario) {
   // UNTUK APA? Menentukan apakah video tampil sebagai layar datar (flat).
@@ -24,7 +24,7 @@ export function isFlatVideo(scenario) {
  * <a-text> A-Frame standar tidak dukung inline italic per kata (tidak ada
  * atribut fontStyle), jadi untuk scene 3D (360 + VR) penanda dibersihkan
  * agar tidak tampil mentah — DOM mobile-flat yang render <i> beneran
- * (lihat richItalic di scenario.js).
+ * (lihat richItalic di scenario-overlays.js).
  */
 export function stripItalicMarkers(value) {
   // UNTUK APA? Menghapus penanda *miring* agar teks 3D <a-text> tampil bersih.
@@ -44,32 +44,41 @@ export function hasItalicMarkers(value) {
  * Menghitung posisi, ukuran, dan atribut data untuk tiap opsi.
  */
 export function buildOptionsHtml(options = [], variant = 'mobile') {
-  // UNTUK APA? Membangun tombol-tombol jawaban kuis (<a-entity> + <a-plane> + <a-text>) dalam satu baris.
+  // UNTUK APA? Membangun tombol-tombol jawaban kuis (<a-entity> + <a-plane> + <a-text>).
   // KENAPA? Opsi harus terpusat rapi di semua ukuran layar/VR, jadi posisi dihitung otomatis bukan hardcode.
+  const isVr = variant === 'vr';
   const count = options.length || 1;
 
-  // Total lebar yang tersedia untuk baris opsi (di dalam panel)
-  // Perhitungan lebar opsi: bagi ruang tersedia dikurangi total jeda antar tombol,
-  // agar N opsi selalu pas selebar panel tanpa tumpuk atau keluar bingkai.
-  const availableWidth = variant === 'vr' ? 2.2 : 4.2;
-  const gapX = variant === 'vr' ? 0.08 : 0.15;
+  // VR: opsi disusun horizontal; ukuran dan posisi final dihitung ulang oleh
+  // fitVrQuizLayout() setelah font A-Frame siap.
+  const vrTextWidth = 1.95;
+  const vrWrapCount = 28;
+  const vrProvisionalWidth = 2.1;
+  const vrProvisionalHeight = 0.62;
+  const vrGapX = 0.12;
+
+  // Mobile tetap memakai layout satu baris seperti sebelumnya.
+  const availableWidth = isVr ? 2.2 : 4.2;
+  const gapX = isVr ? 0.08 : 0.15;
 
   const optionWidth = (availableWidth - gapX * (count - 1)) / count;
-  const optionHeight = variant === 'vr' ? 0.62 : 1.05;
+  const optionHeight = isVr ? vrProvisionalHeight : 1.05;
 
   const totalRowWidth = optionWidth * count + gapX * (count - 1);
   // startX = titik kiri agar baris terpusat (setengah total dikurangi setengah tombol pertama).
   const startX = -totalRowWidth / 2 + optionWidth / 2;
 
-  const y = variant === 'vr' ? -0.5 : -0.5;
-  const textScale = variant === 'vr'
-    ? '0.9 0.9 0.9'
-    : '0.9 0.9 0.9';
-  const wrapCount = variant === 'vr' ? 18 : 20;
+  const y = -0.5;
+  const textScale = '0.9 0.9 0.9';
+  const wrapCount = isVr ? vrWrapCount : 20;
 
   return options
     .map((option, index) => {
-      const x = startX + index * (optionWidth + gapX);
+      // Posisi VR sementara; auto-fit mengatur satu baris horizontal setelah font siap.
+      const x = isVr
+        ? (index - (count - 1) / 2) * (vrProvisionalWidth + vrGapX)
+        : startX + index * (optionWidth + gapX);
+      const optionY = y;
 
       return `
         <a-entity
@@ -78,11 +87,11 @@ export function buildOptionsHtml(options = [], variant = 'mobile') {
           data-next="${safeText(option.next ?? '')}"
           data-consequence="${safeText(option.consequence ?? '')}"
           data-correct="${option.correct ? 'true' : 'false'}"
-          position="${x.toFixed(3)} ${y} 0.04"
+          position="${x.toFixed(3)} ${optionY.toFixed(3)} 0.04"
         >
           <a-plane
             class="option-bg clickable"
-            width="${optionWidth.toFixed(3)}"
+            width="${isVr ? vrProvisionalWidth : optionWidth.toFixed(3)}"
             height="${optionHeight}"
             color="#6f9fbd"
             opacity="0.96"
@@ -90,10 +99,10 @@ export function buildOptionsHtml(options = [], variant = 'mobile') {
           ></a-plane>
 
           <a-text
-            class="clickable"
+            class="quiz-option-text clickable"
             value="${safeText(option.label)}. ${safeText(option.text)}"
             align="center"
-            width="${(optionWidth + 0.15).toFixed(3)}"
+            width="${isVr ? vrTextWidth : (optionWidth + 0.15).toFixed(3)}"
             color="#ffffff"
             scale="${textScale}"
             position="0 0 0.03"
@@ -124,12 +133,15 @@ export function buildQuizPanelHtml(scenario, variant = 'mobile', quizZ = '-3.1')
 
   return `
     <a-entity
-      class="quiz-panel"
+      class="quiz-panel${variant === 'vr' ? ' quiz-panel-vr' : ''}"
+      data-base-width="${panelWidth}"
+      data-base-height="${panelHeight}"
       visible="false"
       // Posisi kuis: y=3 (agak di atas mata 1.6) + quizZ kedalaman; VR-flat dimajukan (-2.45) agar di depan layar bioskop.
       position="0 3 ${quizZ}"
     >
       <a-plane
+        class="quiz-panel-bg"
         width="${panelWidth}"
         height="${panelHeight}"
         color="#f7fbfe"
@@ -138,6 +150,7 @@ export function buildQuizPanelHtml(scenario, variant = 'mobile', quizZ = '-3.1')
       ></a-plane>
 
       <a-plane
+        class="quiz-panel-accent"
         width="${panelWidth}"
         height="0.08"
         color="#78b7dc"
@@ -146,6 +159,7 @@ export function buildQuizPanelHtml(scenario, variant = 'mobile', quizZ = '-3.1')
       ></a-plane>
 
       <a-text
+        class="quiz-panel-title"
         value="DECISION POINT"
         align="center"
         width="${variant === 'vr' ? '1.5' : '2.2'}"
@@ -155,6 +169,7 @@ export function buildQuizPanelHtml(scenario, variant = 'mobile', quizZ = '-3.1')
       ></a-text>
 
       <a-text
+        class="quiz-question-text"
         value="${safeText(scenario.question)}"
         align="center"
         width="${questionWidth}"
@@ -467,38 +482,49 @@ export function buildTimedOverlaysHtml(scenario, { isVr = false, isFlat = false 
 }
 
 /** Bangun HTML A-Frame untuk tombol 'Kembali' di dunia VR/mobile. */
-export function buildWorldBackButtonHtml() {
+export function buildWorldBackButtonHtml(variant = 'mobile') {
   // UNTUK APA? Membuat tombol "← Kembali" 3D yang selalu menghadap pengguna di dunia VR/mobile.
   // KENAPA? Navigasi keluar scene butuh objek klikable (raycaster .clickable) dengan posisi/rotasi tetap di depan kamera.
+  // VR memakai ukuran lebih besar (±25%) agar mudah ditatap lewat gaze cursor; mobile tetap ukuran lama.
+  const isVr = variant === 'vr';
+  const width = isVr ? '1.6' : '1';
+  const height = isVr ? '0.6' : '0.38';
+  const accentY = isVr ? '0.2625' : '0.16';
+  const accentHeight = isVr ? '0.075' : '0.05';
+  const textWidth = isVr ? '1.9' : '1.65';
+  const textScale = isVr ? '1.15 1.15 1.15' : '1 1 1';
+  const position = isVr ? '-4.2 3.95 -3.2' : '-5 4 -3.2';
+
   return `
     <a-entity
       class="world-back-button clickable"
-      position="-5 4 -3.2"
+      position="${position}"
       rotation="0 30 0"
     >
       <a-plane
         class="world-back-button-bg clickable"
-        width="1"
-        height="0.38"
+        width="${width}"
+        height="${height}"
         color="#f7fbfe"
         opacity="0.97"
         material="shader: flat; side: double"
       ></a-plane>
       <a-plane
         class="clickable"
-        width="1"
-        height="0.05"
+        width="${width}"
+        height="${accentHeight}"
         color="#78b7dc"
-        position="0 0.16 0.04"
+        position="0 ${accentY} 0.04"
         material="shader: flat; side: double"
       ></a-plane>
       <a-text
         class="clickable"
         value="← Kembali"
         align="center"
-        width="1.65"
+        width="${textWidth}"
         color="#183247"
         position="0 0 0.03"
+        scale="${textScale}"
         wrap-count="12"
       ></a-text>
     </a-entity>
@@ -581,7 +607,7 @@ export function buildCalibrationSceneHtml({ eye = 'left' } = {}) {
   // UNTUK APA? Membangun scene kalibrasi mata kiri/kanan (target silang + panel instruksi + kamera + tombol kembali).
   // KENAPA? VR butuh penyelarasan panel kiri/kanan agar tidak double; scene terpisah per mata memudahkan kalibrasi.
   const sceneId = `calibration-${eye}-scene`;
-  const worldBackButtonHtml = buildWorldBackButtonHtml();
+  const worldBackButtonHtml = buildWorldBackButtonHtml('vr');
 
   return `
     <a-scene
@@ -767,7 +793,7 @@ export function buildSceneHtml({ mode, eye = 'main', scenario }) {
     isVr ? 'vr' : 'mobile',
     isVr && isFlatVideo(scenario) ? '-2.45' : '-3.1',
   );
-  const worldBackButtonHtml = buildWorldBackButtonHtml();
+  const worldBackButtonHtml = buildWorldBackButtonHtml(isVr ? 'vr' : 'mobile');
   // Gerbang START khusus VR: jeda tiap segmen sampai user siap (mobile tidak pakai).
   const vrStartGateHtml = isVr ? buildVrStartGateHtml() : '';
 
