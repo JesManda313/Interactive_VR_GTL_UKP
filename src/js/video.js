@@ -1,22 +1,7 @@
-/**
- * video.js — video & scene mounts.
- * Dipakai mobile-player.html + vr-player.html.
- * (Handler `onended` dipasang oleh scenario.js agar modul ini bebas siklus import.)
- *
- * UNTUK APA FILE INI?
- * Mengelola elemen <video> HTML: bikin, bersihkan, pause, play.
- * Dipisah dari scenario.js KENAPA? Agar logic video bisa dipakai ulang VR+mobile
- * tanpa circular import (scenario.js import file ini, bukan sebaliknya).
- */
+// video.js: kelola elemen <video> materi (buat, pause, play, bersihkan) untuk mobile dan VR.
 import { getFadeOverlays } from './fade.js';
 
-/**
- * showVideoError(title):
- * Untuk apa? Tampilkan pesan GAGAL PUTAR yang menetap di overlay fade (mobile + VR).
- * KENAPA? Tanpa ini, video rusak/hilang = layar hitam misterius tanpa petunjuk
- * (kasus nyata: file konsekuensi-salah 623MB ber-codec HEVC + durasi 1 detik).
- * Dipanggil dari handler 'error' elemen video; render normal tidak tersentuh.
- */
+// showVideoError(title): tampilkan pesan gagal putar di overlay fade mobile dan VR.
 export function showVideoError(title) {
   try {
     for (const mode of ['mobile', 'vr']) {
@@ -30,7 +15,7 @@ export function showVideoError(title) {
   } catch { /* overlay boleh tidak ada; jangan ganggu alur */ }
 }
 
-/** Judul pendek dari src untuk pesan error (tanpa blob/data raksasa). */
+// shortVideoLabel(video): judul pendek dari src untuk pesan error (tanpa data-URL raksasa).
 function shortVideoLabel(video) {
   const src = video?.getAttribute?.('src') ?? '';
   if (!src) return '';
@@ -41,7 +26,7 @@ function shortVideoLabel(video) {
   return parts[parts.length - 1] || clean.slice(-40);
 }
 
-/** Pasang sekali per elemen: error video -> warn console + pesan menetap di layar. */
+// hookVideoError(video): pasang sekali per elemen; error video -> warning + pesan menetap.
 function hookVideoError(video) {
   if (!video || video.dataset.errHook) return;
   video.dataset.errHook = '1';
@@ -53,37 +38,27 @@ function hookVideoError(video) {
   });
 }
 
-/**
- * ensureSharedVrVideo(scenario):
- * Untuk apa? Pastikan ada 1 elemen video bersama untuk VR (dipakai kedua mata kiri+kanan).
- * KENAPA 1 video bersama (bukan 2)? Hemat memori & sinkron: kalau 2 video, kiri-kanan bisa
- * tidak sinkron / dobel buffering. A-Frame <a-video> kiri & kanan sama-sama menunjuk src="#sharedVrVideo".
- * - Buat elemen jika belum ada + set atribut (crossorigin, playsinline, preload).
- *   KENAPA playsinline? Agar iOS tidak paksa fullscreen. KENAPA display:none? Video asli disembunyikan,
- *   yang tampil adalah tekstur 3D-nya.
- * - if src beda -> pause + ganti src + load(). KENAPA cek beda dulu? Agar tidak reload sia-sia bila segmen sama.
- * - onerror -> warn. KENAPA? Agar debug tahu file mana yang gagal (path salah / belum unduh).
- */
+// ensureSharedVrVideo(scenario): satu elemen video bersama untuk kedua mata VR (hemat memori dan tetap sinkron).
 export function ensureSharedVrVideo(scenario) {
-  let video = document.getElementById('sharedVrVideo'); // cari dulu, jangan bikin dobel.
+  let video = document.getElementById('sharedVrVideo'); // cari dulu agar tidak dobel.
 
-  if (!video) { // belum ada -> buat baru.
+  if (!video) {
     video = document.createElement('video');
     video.id = 'sharedVrVideo';
     video.className = 'scenario-video shared-vr-video';
-    video.setAttribute('crossorigin', 'anonymous'); // KENAPA? Agar bisa dipakai sebagai tekstur WebGL tanpa taint CORS.
-    video.setAttribute('playsinline', ''); // KENAPA? Cegah fullscreen otomatis di iOS.
+    video.setAttribute('crossorigin', 'anonymous'); // agar bisa jadi tekstur WebGL tanpa taint CORS.
+    video.setAttribute('playsinline', ''); // cegah fullscreen otomatis di iOS.
     video.setAttribute('webkit-playsinline', ''); // versi lama Safari.
-    video.setAttribute('preload', 'metadata'); // KENAPA metadata? Hemat kuota, cukup durasi dulu, bukan full video.
-    video.style.display = 'none'; // sembunyikan elemen asli.
+    video.setAttribute('preload', 'metadata'); // hemat kuota, cukup metadata.
+    video.style.display = 'none'; // yang tampil adalah tekstur 3D.
 
-    document.body.appendChild(video); // taruh di body (di luar scene) agar awet walau scene di-rebuild.
+    document.body.appendChild(video); // di luar scene agar awet saat scene di-rebuild.
   }
 
-  if (video.getAttribute('src') !== scenario.video) { // ganti sumber bila segmen baru.
-    video.pause(); // pause dulu KENAPA? Agar tidak glitch suara saat ganti src.
+  if (video.getAttribute('src') !== scenario.video) { // ganti sumber hanya bila segmen baru.
+    video.pause(); // cegah glitch suara saat ganti src.
     video.setAttribute('src', scenario.video);
-    video.load(); // load() KENAPA? Paksa browser muat ulang src baru.
+    video.load(); // paksa browser memuat src baru.
   }
 
   video.onerror = () => {
@@ -97,30 +72,20 @@ export function ensureSharedVrVideo(scenario) {
   return video;
 }
 
-/**
- * stopVideos():
- * Untuk apa? Hentikan dan bersihkan SEMUA elemen video skenario di DOM.
- * Pause tiap video, hapus src, lalu load() untuk membebaskan resource.
- * KENAPA perlu? Saat pindah segmen/layar, video lama harus mati total (suara berhenti, memori bebas).
- * Tanpa ini, HP kentang bisa kehabisan memori / suara dobel.
- */
+// stopVideos(): hentikan dan lepaskan semua elemen video skenario.
 export function stopVideos() {
-  document.querySelectorAll('.scenario-video').forEach((video) => { // .scenario-video = penanda semua video materi.
+  document.querySelectorAll('.scenario-video').forEach((video) => {
     try {
       video.pause();
-      video.removeAttribute('src'); // hapus src KENAPA? Putus koneksi buffer.
-      video.load(); // load kosong = flush buffer.
+      video.removeAttribute('src'); // putus buffer.
+      video.load(); // flush buffer.
     } catch (error) {
-      console.warn('Video cleanup skipped:', error); // try/catch KENAPA? 1 video gagal jangan gagalkan lainnya.
+      console.warn('Video cleanup skipped:', error); // satu video gagal jangan menggagalkan lainnya.
     }
   });
 }
 
-/**
- * pauseActiveVideos():
- * Untuk apa? Pause semua video skenario yang sedang diputar. Digunakan sebelum menampilkan kuis.
- * KENAPA pause (bukan stop)? Agar setelah jawab kuis, video bisa lanjut / user tidak kehilangan posisi.
- */
+// pauseActiveVideos(): pause semua video skenario tanpa menghapus posisi.
 export function pauseActiveVideos() {
   document.querySelectorAll('.scenario-video').forEach((video) => {
     try {
@@ -131,15 +96,9 @@ export function pauseActiveVideos() {
   });
 }
 
-/**
- * playActiveVideos():
- * Untuk apa? Coba play semua elemen video skenario; jika diblokir browser, log peringatan.
- * KENAPA async + await + try/catch per video? Browser modern blokir autoplay tanpa gesture user.
- * Jadi play() bisa reject Promise — harus ditangkap agar tidak jadi unhandled error merah.
- * KENAPA skip bila !src? Video tanpa src di-play akan error sia-sia.
- */
+// playActiveVideos(): coba play semua video skenario; autoplay bisa ditolak browser tanpa gesture.
 export async function playActiveVideos() {
-  const videos = [...document.querySelectorAll('.scenario-video')]; // spread KENAPA? NodeList -> Array agar bisa for..of + await berurutan.
+  const videos = [...document.querySelectorAll('.scenario-video')]; // NodeList -> Array agar bisa await berurutan.
 
   for (const video of videos) {
     const src = video.getAttribute('src');
@@ -151,26 +110,16 @@ export async function playActiveVideos() {
     hookVideoError(video);
 
     try {
-      await video.play(); // await KENAPA? Tunggu 1 selesai sebelum lanjut agar log berurutan + hemat CPU.
+      await video.play(); // berurutan agar log rapi dan hemat CPU.
     } catch (error) {
       console.warn('Video perlu gesture user untuk play:', error);
     }
   }
 }
 
-/**
- * clearScenes():
- * Untuk apa? Clear semua scene terpasang: hentikan video dan kosongkan kontainer mount.
- * Juga reset flag visibilitas kuis + sembunyikan popup flat mobile.
- * KENAPA dipanggil tiap pindah segmen/layar? Agar tidak ada sisa scene lama menumpuk (dobel A-Frame = lag).
- * - Kosongkan #mobileSceneMount, #vrLeftMount, #vrRightMount via innerHTML=''.
- * - Sembunyikan popup quiz/end/flat/rotate hint.
- * - Unlock orientation + exit fullscreen KENAPA? Mode flat sebelumnya paksa landscape+fullscreen,
- *   harus dikembalikan agar layar daftar bisa portrait normal.
- * - flatVideo.onended=null KENAPA? Lepas handler lama agar tidak ke-trigger setelah scene dibuang.
- */
+// clearScenes(): hentikan video dan kosongkan semua mount scene serta popup sisa.
 export function clearScenes() {
-  stopVideos(); // matikan video dulu sebelum buang DOM-nya.
+  stopVideos(); // matikan video sebelum DOM dibuang.
 
   const mobileMount = document.getElementById('mobileSceneMount');
   const vrLeftMount = document.getElementById('vrLeftMount');
@@ -183,11 +132,12 @@ export function clearScenes() {
   if (vrLeftMount) vrLeftMount.innerHTML = '';
   if (vrRightMount) vrRightMount.innerHTML = '';
 
-  document.getElementById('mobileQuizPopup')?.classList.add('hidden'); // ?. KENAPA? Elemen mungkin belum ada di DOM awal.
+  document.getElementById('mobileQuizPopup')?.classList.add('hidden'); // guard null: elemen mungkin belum ada.
   document.getElementById('mobileEndPopup')?.classList.add('hidden');
   document.getElementById('mobileFlatWrap')?.classList.add('hidden');
   document.getElementById('mobileRotateHint')?.classList.add('hidden');
 
+  // kembalikan orientasi + fullscreen agar layar daftar bisa portrait normal.
   try {
     if (screen.orientation?.unlock) screen.orientation.unlock();
   } catch { /* abaikan */ }
@@ -197,6 +147,6 @@ export function clearScenes() {
 
   const flatVideo = document.getElementById('mobileFlatVideo');
   if (flatVideo) {
-    flatVideo.onended = null;
+    flatVideo.onended = null; // lepas handler lama agar tidak terpicu setelah scene dibuang.
   }
 }
