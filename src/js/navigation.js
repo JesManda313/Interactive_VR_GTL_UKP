@@ -1,22 +1,13 @@
-/**
- * navigation.js — pindah layar & entry mode.
- * Dipakai home.html, settings.html, mode.html + world-back-button di kedua player.
- *
- * UNTUK APA FILE INI?
- * Satu pintu untuk pindah halaman (showScreen) dan masuk mode putar (openMode).
- * KENAPA dipusatkan? Agar tidak ada 5 versi fungsi "kembali" yang beda perilaku.
- * Semua tombol kembali memanggil fungsi di sini.
- */
-import { store } from './store.js'; // baca/tulis activeModule/activeMode. KENAPA? Navigasi harus reset state saat pindah.
+// navigation.js: pindah layar dan masuk mode putar (dipakai home, settings, mode, dan kedua player).
+import { store } from './store.js'; // activeModule/activeMode; navigasi reset state saat pindah layar.
 import { applyCalibrationTarget } from './calibration.js'; // terapkan geser mata setelah scene kalibrasi dibuat.
-import { clearScenes, playActiveVideos } from './video.js'; // bersihkan video/scene lama sebelum pindah. KENAPA? Cegah suara dobel + memori bocor. playActiveVideos untuk gerbang panduan mobile.
+import { clearScenes, playActiveVideos } from './video.js'; // bersihkan scene/video lama; playActiveVideos untuk gerbang panduan mobile.
 import { buildCalibrationSceneHtml } from './scene-builders.js'; // bangun HTML A-Frame kalibrasi.
-import { bindSceneEvents, lockLandscape, renderActiveScenario, setNavHandlers, unlockOrientation, cancelPendingRedirects } from './scenario.js'; // render engine + kunci orientasi + daftarkan handler balik (hindari circular via setter).
+import { bindSceneEvents, lockLandscape, renderActiveScenario, setNavHandlers, unlockOrientation, cancelPendingRedirects } from './scenario.js'; // render engine + kunci orientasi + handler balik (setter agar tidak circular).
 import { applyImageUris, applyLocalVideos } from './download-manager.js'; // petakan file lokal yang sudah diunduh ke scenario.video.
 import { firstScenarioId, isUnlocked } from './progress.js'; // tentukan segmen mulai yang boleh dibuka.
 
-// SCREEN_IDS: Untuk apa? Petakan nama logis ('home') -> id DOM ('homeScreen').
-// KENAPA object? Agar showScreen('home') tidak perlu hafal id HTML; kalau id HTML berubah cukup ubah di sini.
+// SCREEN_IDS: nama layar logis -> id DOM.
 const SCREEN_IDS = {
   home: 'homeScreen',
   settings: 'settingsScreen',
@@ -26,55 +17,35 @@ const SCREEN_IDS = {
   vr: 'vrScreen',
 };
 
-/**
- * showScreen(name):
- * Untuk apa? Ganti layar yang terlihat ke screen bernama `name`.
- * - Sembunyikan semua screen yang diketahui lalu tampilkan yang dipilih (tambah/hapus .hidden).
- *   KENAPA sembunyikan semua dulu? Karena app ini SPA 1 halaman (semua layar ada di DOM sekaligus),
- *   hanya 1 yang boleh terlihat.
- * - Dispatch event `${name}-screen-shown` KENAPA? Beri tahu pendengar (mis. timeline segmen di mode.js)
- *   agar me-render ulang saat layarnya tampil — tanpa import silang antar-modul halaman.
- * @param {'home'|'settings'|'mode'|'download'|'mobile'|'vr'} name
- */
+// showScreen(name): sembunyikan semua layar lalu tampilkan satu layar target.
 export function showScreen(name) {
   Object.values(SCREEN_IDS).forEach((id) => {
-    document.getElementById(id)?.classList.add('hidden'); // ?. KENAPA? 1 id hilang jangan crash semua.
+    document.getElementById(id)?.classList.add('hidden'); // guard null: satu id hilang tidak boleh menghentikan semua.
   });
 
   document.getElementById(SCREEN_IDS[name])?.classList.remove('hidden');
 
-  // Beri tahu pendengar (mis. timeline segmen di mode.js) agar me-render
-  // ulang saat layarnya tampil — tanpa import silang antar-modul halaman.
+  // beri tahu pendengar (mis. timeline segmen) agar render ulang saat layar tampil.
   try {
     window.dispatchEvent(new CustomEvent(`${name}-screen-shown`));
   } catch { /* abaikan */ }
 }
 
-/**
- * backToModeSelection():
- * Untuk apa? Kembali ke layar pemilihan mode (tetap di modul yang sama).
- * - activeMode=null KENAPA? Tandai "tidak sedang memutar" agar polling remote berhenti bereaksi.
- * - clearScenes() KENAPA? Matikan video agar suara tidak jalan terus di background.
- */
+// backToModeSelection(): kembali ke layar pemilihan mode tanpa memutar video.
 export function backToModeSelection() {
-  store.activeMode = null;
+  store.activeMode = null; // tandai tidak sedang memutar agar polling remote berhenti.
   unlockOrientation();
   try {
     cancelPendingRedirects();
   } catch { /* abaikan */ }
-  clearScenes();
+  clearScenes(); // matikan video agar suara tidak jalan di background.
   closeStalePopups();
   showScreen('mode');
 }
 
-/**
- * backToModules():
- * Untuk apa? Kembali ke daftar modul (reset modul dan skenario aktif).
- * KENAPA reset semua (module, scenarios, map, id, mode)? Agar buka modul berikutnya mulai bersih,
- * tidak kebawa data modul lama (bug umum: video lama ikut ke-render).
- */
+// backToModules(): kembali ke daftar modul dan reset state modul aktif.
 export function backToModules() {
-  store.activeModule = null;
+  store.activeModule = null; // reset semua agar modul berikutnya mulai bersih.
   store.scenarios = [];
   store.scenarioMap = new Map();
   store.activeScenarioId = null;
@@ -86,9 +57,7 @@ export function backToModules() {
   showScreen('home');
 }
 
-// closeStalePopups(): Untuk apa? Pastikan tidak ada popup/quiz yang nyangkut
-// terlihat setelah pindah layar. KENAPA? Popup fixed (mode/remote/quiz) hidup di
-// luar screen yang di-hidden, jadi showScreen saja tidak menutupnya.
+// closeStalePopups(): tutup popup fixed yang tidak ikut tersembunyi saat pindah layar.
 function closeStalePopups() {
   store.awaitMobileGuide = false; // gerbang panduan ikut reset agar autoplay berikutnya tidak tertahan.
   for (const id of ['modePopup', 'remotePopup', 'mobileQuizPopup', 'mobileEndPopup', 'mobileGuideModal']) {
@@ -96,11 +65,7 @@ function closeStalePopups() {
   }
 }
 
-// closeMobileGuide(): Untuk apa? Satu-satunya fungsi penutup modal panduan mobile.
-// KENAPA fungsi tunggal? Agar tombol, klik backdrop, dan tombol kembali semua memanggil
-// jalur yang sama — tidak ada state ganda yang bisa bikin stuck.
-// KENAPA putar video di sini? Modal ini gerbang blokir: video di-pause selama modal
-// terbuka (lihat awaitMobileGuide), jadi penutupan = sinyal "user siap, putar sekarang".
+// closeMobileGuide(): tutup modal panduan mobile dan putar video yang tertahan.
 export function closeMobileGuide() {
   document.getElementById('mobileGuideModal')?.classList.add('hidden');
   if (store.awaitMobileGuide) {
@@ -109,23 +74,20 @@ export function closeMobileGuide() {
   }
 }
 
-let mobileGuideWired = false; // wiring sekali saja. KENAPA? openMode dipanggil tiap segmen; tanpa flag, listener tombol menumpuk.
+let mobileGuideWired = false; // wiring sekali saja agar listener tidak menumpuk tiap openMode.
 
-// wireMobileGuideOnce(): Untuk apa? Pasang listener tombol + backdrop + kembali sekali setelah DOM ada.
-// KENAPA di sini (bukan init)? mobile-player.html di-inject via ?raw saat start; wiring di openMode
-// menjamin elemen sudah ada. KENAPA guard flag? Agar tidak dobel listener tiap buka mode.
+// wireMobileGuideOnce(): pasang listener modal panduan mobile sekali setelah DOM tersedia.
 function wireMobileGuideOnce() {
   if (mobileGuideWired) return;
   const modal = document.getElementById('mobileGuideModal');
   const closeBtn = document.getElementById('mobileGuideClose');
   const backBtn = document.getElementById('mobileGuideBack');
-  if (!modal || !closeBtn) return; // HTML belum ada -> coba lagi di openMode berikutnya, jangan crash.
+  if (!modal || !closeBtn) return; // HTML belum ada: coba lagi di openMode berikutnya.
   closeBtn.addEventListener('click', closeMobileGuide);
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeMobileGuide(); // klik area gelap = tutup + putar.
+    if (e.target === modal) closeMobileGuide(); // klik backdrop = tutup.
   });
-  // Jalan keluar darurat anti-stuck: kalau user tidak mau lanjut, kembali ke pilih
-  // mode tanpa memutar video (flag dibersihkan agar autoplay tidak nyangkut).
+  // kembali ke pilih mode tanpa memutar video.
   backBtn?.addEventListener('click', () => {
     store.awaitMobileGuide = false;
     document.getElementById('mobileGuideModal')?.classList.add('hidden');
@@ -134,15 +96,12 @@ function wireMobileGuideOnce() {
   mobileGuideWired = true;
 }
 
-// showMobileGuide(): Untuk apa? Gerbang blokir tiap masuk mobile mode: modal tampil
-// dulu, video di-pause (renderActiveScenario menahan autoplay via awaitMobileGuide),
-// dan video baru diputar saat user tekan "Mengerti, mulai" (closeMobileGuide).
-// KENAPA tiap masuk (bukan sekali)? User bisa lupa cara menjawab/drag/gyro.
+// showMobileGuide(): tampilkan modal panduan dan tahan autoplay sampai user menekan "Mengerti".
 function showMobileGuide() {
   wireMobileGuideOnce();
   const modal = document.getElementById('mobileGuideModal');
   if (!modal) {
-    store.awaitMobileGuide = false; // modal tidak ada -> jangan tahan video selamanya.
+    store.awaitMobileGuide = false; // modal tidak ada: jangan tahan video selamanya.
     return;
   }
   store.awaitMobileGuide = true; // tahan autoplay; dibersihkan oleh closeMobileGuide.
@@ -152,10 +111,7 @@ function showMobileGuide() {
   modal.classList.remove('hidden');
 }
 
-// renderCalibrationScene(): Untuk apa? Render 2 scene kalibrasi (kiri+kanan) ke mount VR.
-// - buildCalibrationSceneHtml({eye}) KENAPA panggil 2x? VR butuh 2 <a-scene> (1 per mata).
-// - bindSceneEvents KENAPA? Agar tombol Kembali di dunia 3D bisa diklik.
-// - applyCalibrationTarget('vr') KENAPA setelah render? Transform CSS hanya bisa diterapkan setelah elemen ada.
+// renderCalibrationScene(): render dua scene kalibrasi (kiri dan kanan) ke mount VR.
 export function renderCalibrationScene() {
   const vrLeftMount = document.getElementById('vrLeftMount');
   const vrRightMount = document.getElementById('vrRightMount');
@@ -163,16 +119,14 @@ export function renderCalibrationScene() {
   vrLeftMount.innerHTML = buildCalibrationSceneHtml({ eye: 'left' });
   vrRightMount.innerHTML = buildCalibrationSceneHtml({ eye: 'right' });
 
-  bindSceneEvents(vrLeftMount);
+  bindSceneEvents(vrLeftMount); // agar tombol Kembali di dunia 3D bisa diklik.
   bindSceneEvents(vrRightMount);
-  applyCalibrationTarget('vr');
+  applyCalibrationTarget('vr'); // setelah render: transform CSS butuh elemen sudah ada.
 }
 
-// openCalibrationScreen(): Untuk apa? Masuk ke mode kalibrasi khusus (bukan materi).
-// - activeModule={id:'02-kalibrasi-vr', type:'calibration'} KENAPA modul palsu? Agar gaze.js & vr-player.js
-//   tahu "ini mode kalibrasi" dan ubah perilaku tombol (confirm = kembali, bukan jawab kuis).
+// openCalibrationScreen(): masuk ke mode kalibrasi khusus (bukan materi).
 export function openCalibrationScreen() {
-  store.activeModule = { id: '02-kalibrasi-vr', type: 'calibration' };
+  store.activeModule = { id: '02-kalibrasi-vr', type: 'calibration' }; // modul palsu agar gaze.js/vr-player.js tahu ini kalibrasi.
   store.activeMode = 'vr';
   store.previousCalibrationButtons = []; // reset edge-detection tombol.
   clearScenes();
@@ -181,16 +135,7 @@ export function openCalibrationScreen() {
   renderCalibrationScene();
 }
 
-/**
- * openMode(mode, startId=null):
- * Untuk apa? Buka mode pemutaran ('vr' atau 'mobile') untuk modul yang aktif.
- * startId opsional: mulai dari segmen itu bila terbuka menurut progres;
- * selain itu (atau bila terkunci) jatuh ke segmen pertama.
- * - Cek activeModule/scenarios KENAPA? Jangan buka player kosong (akan error render).
- * - isUnlocked() KENAPA? Cegah user loncat via console ke segmen terkunci.
- * - applyLocalVideos/applyImageUris KENAPA dipanggil lagi di sini? Jaminan: petakan ulang video + gambar lokal
- *   yang sudah terunduh (menutup celah bila player dibuka lewat jalur yang melewatkan apply di home.js). Idempoten + ter-cache.
- */
+// openMode(mode, startId): buka player VR/mobile untuk modul aktif, mulai dari segmen startId bila terbuka.
 export async function openMode(mode, startId = null) {
   if (!store.activeModule || !store.scenarios.length) {
     alert('Pilih modul terlebih dahulu.');
@@ -198,17 +143,15 @@ export async function openMode(mode, startId = null) {
   }
 
   const moduleId = store.activeModule.id;
-  const wanted = typeof startId === 'string' && startId ? startId : null; // pastikan string non-kosong, else null.
-  const fallback = firstScenarioId(store.scenarios) ?? store.scenarios[0]?.id ?? null; // segmen pertama sebagai aman.
-  const start = wanted && isUnlocked(moduleId, wanted, store.scenarios) ? wanted : fallback; // pakai wanted bila boleh, else fallback.
+  const wanted = typeof startId === 'string' && startId ? startId : null;
+  const fallback = firstScenarioId(store.scenarios) ?? store.scenarios[0]?.id ?? null; // segmen pertama sebagai cadangan.
+  const start = wanted && isUnlocked(moduleId, wanted, store.scenarios) ? wanted : fallback; // tolak segmen terkunci.
 
   store.activeMode = mode;
   store.activeScenarioId = start;
   store.shouldShowQuizImmediately = false; // reset flag kuis langsung.
 
-  // Jaminan: petakan ulang video + gambar lokal yang sudah terunduh ke
-  // objek skenario yang akan di-render (menutup celah bila player dibuka
-  // lewat jalur yang melewatkan apply di home.js). Idempoten + ter-cache.
+  // petakan ulang media lokal (idempoten) untuk jalur yang melewatkan apply di home.js.
   try {
     await applyLocalVideos(store.scenarios);
     await applyImageUris(store.scenarios);
@@ -218,17 +161,10 @@ export async function openMode(mode, startId = null) {
 
   clearScenes();
   showScreen(mode === 'vr' ? 'vr' : 'mobile');
-  // Gerbang blokir mobile: pasang flag SEBELUM render. KENAPA harus sebelum?
-  // renderActiveScenario menjadwalkan autoplay (setTimeout 400ms) di dalamnya —
-  // kalau flag dipasang setelah await render, jadwal itu sudah terlanjur dibuat
-  // dan video tetap jalan sendiri di belakang modal (bug kemarin).
-  if (mode === 'mobile') store.awaitMobileGuide = true;
-  await renderActiveScenario(); // render segmen pertama. KENAPA await? Tunggu fade/transisi selesai.
-  if (mode === 'mobile') showMobileGuide(); // tampilkan modal; video diputar saat "Mengerti" ditekan.
+  if (mode === 'mobile') store.awaitMobileGuide = true; // sebelum render: autoplay dijadwalkan di dalamnya (setTimeout 400ms).
+  await renderActiveScenario(); // tunggu render + transisi selesai.
+  if (mode === 'mobile') showMobileGuide(); // modal tampil; video diputar saat "Mengerti" ditekan.
 }
 
-// Daftarkan handler navigasi ke scenario engine (untuk world-back-button).
-// Berjalan saat modul ini di-import — selalu sebelum scene sempat di-render.
-// KENAPA via setNavHandlers (bukan import langsung)? Agar scenario.js tidak import navigation.js
-// dan navigation.js import scenario.js (circular). Solusi: scenario sediakan setter, navigation isi belakangan.
+// daftarkan handler kembali ke scenario engine lewat setter agar tidak circular.
 setNavHandlers({ backToModules, backToModeSelection });
