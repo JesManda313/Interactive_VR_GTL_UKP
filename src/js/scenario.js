@@ -1,14 +1,5 @@
-/**
- * scenario.js — scenario & quiz engine (controller).
- * Dipakai mobile-player.html + vr-player.html.
- *
- * File ini tetap memegang alur utama (handleOption -> renderActiveScenario ->
- * showQuiz -> handleOption). Bagian yang lepas dipindah ke modul khusus:
- * - scenario-state.js       : selector state skenario
- * - scenario-orientation.js : lock landscape / hint rotate
- * - scenario-overlays.js    : overlay terjadwal
- * - scenario-quiz-ui.js     : popup + status visual kuis
- */
+// scenario.js: controller alur skenario & kuis (mobile + VR).
+// Selector state, orientasi, overlay, dan UI kuis ada di modul scenario-*.js.
 import { store } from './store.js';
 import { applyCalibrationTarget } from './calibration.js';
 import { markWatched } from './progress.js';
@@ -29,24 +20,23 @@ import { getActiveScenario, isFlatScenario } from './scenario-state.js';
 import { lockLandscape, tryFlatLandscape, exitFlatLandscape} from './scenario-orientation.js';
 import { attachTimedOverlays, detachTimedOverlays, hideTimedOverlays, } from './scenario-overlays.js';
 import { renderMobileQuizPopup, resetOptionStates, setFeedback, colorSelectedOptions, } from './scenario-quiz-ui.js';
-// import { testOnTap,  testOnFeedbackPrepared,  testOnRenderStart,  testOnRenderReady,  testOnVideoStart,} from '../testing/instrument.js'; // (dinonaktifkan sementara)
+// import { testOnTap,  testOnFeedbackPrepared,  testOnRenderStart,  testOnRenderReady,  testOnVideoStart,} from '../testing/instrument.js';
 
 export { getActiveScenario, isFlatScenario };
 export { lockLandscape, unlockOrientation } from './scenario-orientation.js';
 export { hideTimedOverlays };
 export { resetOptionStates, setFeedback, colorSelectedOptions };
 
-// Handler navigasi (backToModules / backToModeSelection) didaftarkan oleh
+// navHandlers: callback navigasi dari navigation.js (hindari circular import).
 let navHandlers = null;
 
-// setNavHandlers: UNTUK APA? Menyimpan callback navigasi (backToModules/backToModeSelection) dari navigation.js.
-// KENAPA? Agar scenario.js bisa pindah halaman tanpa import navigation (menghindari circular import).
+// setNavHandlers(): simpan callback navigasi dari navigation.js.
 export function setNavHandlers(handlers) {
   navHandlers = handlers;
 }
 
 
-//Fetch scenarios.json lalu isi store.scenarios/Map + set skenario pertama aktif.
+// loadScenarios(): fetch scenarios.json lalu isi store + aktifkan skenario pertama.
 export async function loadScenarios(scenarioUrl) {
   const response = await fetch(scenarioUrl);
 
@@ -59,9 +49,7 @@ export async function loadScenarios(scenarioUrl) {
   store.activeScenarioId = store.scenarios[0]?.id ?? null;
 }
 
-/** Sembunyikan gerbang START VR di kedua mata saat setelah pencet tombol start */
-// hideVrStartGate: UNTUK APA? Set visible=false semua .vr-start-gate tanpa memutar video.
-// KENAPA? Dipakai saat kembali dari konsekuensi (kuis langsung tampil, video sudah habis).
+// hideVrStartGate(): sembunyikan gerbang START VR tanpa memutar video.
 function hideVrStartGate() {
   document.querySelectorAll('.vr-start-gate').forEach((el) => {
     try {
@@ -70,26 +58,21 @@ function hideVrStartGate() {
   });
 }
 
-/** START VR ditekan (tatap + tombol remote / klik): tutup gerbang, putar video. */
-// startVrPlayback: UNTUK APA? Satu pintu mulai-putar VR: sembunyikan gate lalu play.
-// KENAPA? Dipanggil gaze.js (remote) + klik mouse (uji laptop) agar perilaku identik.
+// startVrPlayback(): tutup gerbang START lalu putar video (dipanggil gaze.js + klik mouse).
 export function startVrPlayback() {
   if (store.activeMode !== 'vr') return;
   hideVrStartGate();
   playActiveVideos();
 }
 
-/** Sembunyikan popup HTML mobile (quiz + end). */
-// hideMobilePopups: UNTUK APA? Menutup popup kuis/akhir mobile tiap ganti segmen.
-// KENAPA? Agar popup segmen lama tidak bocor menutupi video segmen baru.
+// hideMobilePopups(): tutup popup kuis/akhir mobile agar tidak menutupi segmen baru.
 export function hideMobilePopups() {
   document.getElementById('mobileQuizPopup')?.classList.add('hidden');
   document.getElementById('mobileEndPopup')?.classList.add('hidden');
 }
 
-/** Render scene 360 mobile (A-Frame videosphere) — perilaku lama. */
-// renderMobile360Scenario: UNTUK APA? Bangun scene A-Frame 360 mobile via buildSceneHtml + bind event.
-// KENAPA? Harus keluar dari mode flat dulu (unlock, pause flat, sembunyi popup) agar resource tidak dobel.
+// renderMobile360Scenario(): bangun scene A-Frame 360 mobile via buildSceneHtml.
+// Keluar mode flat dulu (pause + sembunyi popup) agar resource tidak dobel.
 function renderMobile360Scenario(scenario) {
   const mobileMount = document.getElementById('mobileSceneMount');
   const flatWrap = document.getElementById('mobileFlatWrap');
@@ -115,9 +98,8 @@ function renderMobile360Scenario(scenario) {
   bindSceneEvents(mobileMount);
 }
 
-/** Render video flat fullscreen (Sony A6400) — tanpa A-Frame. */
-// renderMobileFlatScenario: UNTUK APA? Tampilkan <video> fullscreen + judul/tag + tombol kembali/rotate.
-// KENAPA? Flat tanpa videosphere hemat resource; onclick di-assign ulang agar listener tidak menumpuk.
+// renderMobileFlatScenario(): tampilkan video flat fullscreen + judul/tag + tombol kembali.
+// onclick di-assign ulang agar listener tidak menumpuk.
 function renderMobileFlatScenario(scenario) {
   const mobileMount = document.getElementById('mobileSceneMount');
   const flatWrap = document.getElementById('mobileFlatWrap');
@@ -127,7 +109,7 @@ function renderMobileFlatScenario(scenario) {
     return;
   }
 
-  // Matikan scene 360 agar tidak dobel resource.
+  // Lepas scene 360 agar resource tidak dobel.
   if (mobileMount) {
     mobileMount.innerHTML = '';
     mobileMount.classList.add('hidden');
@@ -154,7 +136,7 @@ function renderMobileFlatScenario(scenario) {
     console.warn('Video flat gagal dimuat:', video.getAttribute('src'));
   };
 
-  // Tombol kembali (assign ulang agar tidak dobel listener).
+  // Assign ulang onclick agar listener tidak dobel.
   const backButton = document.getElementById('mobileFlatBack');
   if (backButton) {
     backButton.onclick = () => {
@@ -170,18 +152,12 @@ function renderMobileFlatScenario(scenario) {
     };
   }
 
-  // Otomatis coba landscape setiap masuk segmen flat Sony.
+  // Coba landscape tiap masuk segmen flat.
   tryFlatLandscape();
 }
 
-/**
- * Pasang event listener untuk video, opsi kuis, dan tombol kembali di root scene.
- * - Video: ended/error
- * - Quiz options: click, mouseenter, mouseleave
- * - World back button: click -> kembali ke pemilihan mode
- */
-// bindSceneEvents: UNTUK APA? Wiring scene 3D: ended video, klik/hover opsi kuis, tombol kembali dunia.
-// KENAPA? Hover hanya ubah warna bila belum dipilih; kalibrasi bedakan kembali ke modul vs pilih mode.
+// bindSceneEvents(): wiring scene 3D (video ended, opsi kuis, tombol kembali dunia).
+// Hover hanya ubah warna bila belum dipilih; kalibrasi kembali ke daftar modul.
 export function bindSceneEvents(root) {
   const videos = [...root.querySelectorAll('.scenario-video')];
 
@@ -196,7 +172,7 @@ export function bindSceneEvents(root) {
 
   options.forEach((option) => {
     option.addEventListener('click', (event) => {
-      // testOnTap(event); // (dinonaktifkan sementara)
+      // testOnTap(event);
       handleOption(option);
     });
 
@@ -228,8 +204,7 @@ export function bindSceneEvents(root) {
     });
   });
 
-  // Gerbang START VR: klik mouse/touch sebagai fallback uji laptop
-  // (di HP VR pemicunya tatap + tombol remote via gaze.js).
+  // Gerbang START VR: fallback klik mouse/touch (HP VR lewat gaze.js).
   root.querySelectorAll('.vr-start-gate').forEach((gate) => {
     gate.addEventListener('click', (event) => {
       // testOnVideoStart(event); // (dinonaktifkan sementara)
@@ -238,14 +213,9 @@ export function bindSceneEvents(root) {
   });
 }
 
-/* ------------------------------------------------------------------ */
-/* Auto-fit kuis VR                                                    */
-/* ------------------------------------------------------------------ */
+// Auto-fit kuis VR.
 
-/**
- * Ukur ukuran nyata blok <a-text> (sudah termasuk scale elemen).
- * Dipakai agar background opsi bisa mengikuti panjang/tinggi teks.
- */
+// measureTextBlock(): ukur ukuran nyata <a-text> termasuk scale elemen (untuk background opsi).
 function measureTextBlock(textEl) {
   const text = textEl?.components?.text;
   const font = text?.currentFont;
@@ -263,8 +233,7 @@ function measureTextBlock(textEl) {
     return null;
   }
 
-  // Lebar baris terpanjang diambil dari bounding box mesh teks (layout.width
-  // selalu sama dengan lebar wrap, bukan lebar teks sesungguhnya).
+  // Lebar nyata dari bounding box mesh; layout.width = lebar wrap, bukan lebar teks.
   text.geometry.computeBoundingBox();
   const box = text.geometry.boundingBox;
   const rawWidth = box
@@ -282,11 +251,8 @@ function measureTextBlock(textEl) {
   };
 }
 
-/**
- * Susun ulang opsi kuis VR: background mengikuti teks, opsi disusun horizontal,
- * dan panel ikut meninggi bila isinya tidak muat.
- * @returns {boolean} false bila font/layout belum siap (perlu dicoba lagi).
- */
+// applyVrQuizLayout(): susun opsi horizontal, background ikut teks, panel meninggi bila perlu.
+// Return false bila font/layout belum siap (perlu dicoba lagi).
 function applyVrQuizLayout(panel, options) {
   const panelBg = panel.querySelector('.quiz-panel-bg');
   const panelAccent = panel.querySelector('.quiz-panel-accent');
@@ -309,7 +275,7 @@ function applyVrQuizLayout(panel, options) {
       return false;
     }
 
-    // Padding + ukuran minimum supaya kotak tetap nyaman jadi target gaze.
+    // Padding + ukuran minimum agar tetap nyaman jadi target gaze.
     const width = Math.max(1.1, dims.width + 0.34);
     const height = Math.max(0.5, dims.height + 0.24);
 
@@ -368,7 +334,7 @@ function applyVrQuizLayout(panel, options) {
     feedbackEl.setAttribute('position', `0 ${feedbackY.toFixed(3)} 0.03`);
   }
 
-  // Sediakan ruang untuk judul/pertanyaan di atas dan feedback di bawah.
+  // Ruang untuk judul/pertanyaan di atas dan feedback di bawah.
   const topEdge = Math.max(
     baseHeight / 2,
     1.2 + (titleDims?.height ?? 0) / 2 + 0.08,
@@ -387,10 +353,7 @@ function applyVrQuizLayout(panel, options) {
   return true;
 }
 
-/**
- * Pasang auto-fit kuis VR. Font A-Frame dimuat asinkron, jadi tunggu
- * textfontset lalu ukur ulang (dengan beberapa kali percobaan cadangan).
- */
+// fitVrQuizLayout(): tunggu font A-Frame (textfontset) lalu ukur ulang, maks 40 percobaan.
 function fitVrQuizLayout(root) {
   const panel = root?.querySelector?.('.quiz-panel-vr');
 
@@ -443,15 +406,10 @@ function fitVrQuizLayout(root) {
   run();
 }
 
-/**
- * Handler ketika sebuah video skenario selesai diputar.
- * Menentukan langkah berikutnya berdasarkan `scenario.type`.
- */
+// endRedirectTimer: guard agar redirect ke pilih mode tidak dobel.
 let endRedirectTimer = null;
 
-/** Video terakhir selesai -> langsung kembali ke halaman pilih mode modul tersebut. */
-// handleModuleEnd: UNTUK APA? Akhiri modul: jeda video, sembunyi popup/overlay, fade pesan lalu kembali pilih mode.
-// KENAPA? Guard endRedirectTimer cegah dobel redirect; try/catch fade agar tetap kembali bila overlay hilang.
+// handleModuleEnd(): jeda video, bersihkan popup/overlay, fade pesan, lalu kembali ke pilih mode.
 function handleModuleEnd() {
   if (endRedirectTimer) return;
   pauseActiveVideos();
@@ -463,7 +421,7 @@ function handleModuleEnd() {
     navHandlers?.backToModeSelection?.();
   };
 
-  // Tampilkan pesan penutup sebentar agar transisi tidak terasa kepotong.
+  // Pesan penutup singkat agar transisi tidak terasa kepotong.
   try {
     const overlay = getFadeOverlay(store.activeMode);
     if (overlay) {
@@ -480,12 +438,8 @@ function handleModuleEnd() {
   endRedirectTimer = window.setTimeout(goBack, 600);
 }
 
-/**
- * cancelPendingRedirects():
- * Untuk apa? Batalkan timer auto-kembali yang masih tertunda saat user keluar player manual.
- * KENAPA? Tanpa ini, timer nyasar bisa memicu navigasi/animasi setelah layar berganti
- * (salah satu pemicu bug popup stuck di layar mode).
- */
+// cancelPendingRedirects(): batalkan timer auto-kembali saat user keluar player manual.
+// Tanpa ini timer nyasar bisa memicu navigasi setelah layar berganti (popup stuck).
 export function cancelPendingRedirects() {
   if (endRedirectTimer) {
     window.clearTimeout(endRedirectTimer);
@@ -494,27 +448,26 @@ export function cancelPendingRedirects() {
   detachTimedOverlays();
 }
 
+// handleVideoEnded(): router alur setelah video habis, per scenario.type.
 export function handleVideoEnded() {
-  // handleVideoEnded: UNTUK APA? Router alur setelah video habis berdasarkan scenario.type.
-  // KENAPA? Tiap tipe beda: decision tampilkan kuis; consequence/linear ikuti next/returnTo; end tutup modul.
   const currentScenario = getActiveScenario();
 
   if (!currentScenario) {
     return;
   }
 
-  // Video habis = segmen tuntas ditonton -> catat progres modul.
+  // Tandai segmen tuntas ditonton (progres opsional).
   try {
     markWatched(store.activeModule?.id, currentScenario.id);
   } catch { /* progres opsional, jangan ganggu alur */ }
 
-  // Cabang decision: video selesai berarti waktunya memilih -> tampilkan kuis (lanjut di handleOption).
+  // Decision: video selesai -> tampilkan kuis (lanjut di handleOption).
   if (currentScenario.type === 'decision') {
     showQuiz();
     return;
   }
 
-  // Cabang consequence: video akibat selesai -> ke next, atau kembali ke soal (returnTo + quiz langsung).
+  // Consequence: ke next, atau kembali ke soal via returnTo (kuis langsung).
   if (currentScenario.type === 'consequence') {
     if (currentScenario.next && store.scenarioMap.has(currentScenario.next)) {
       store.activeScenarioId = currentScenario.next;
@@ -534,7 +487,7 @@ export function handleVideoEnded() {
     return;
   }
 
-  // Cabang linear: video bersambung -> ke next bila ada, bila tidak berarti modul selesai.
+  // Linear: ke next bila ada, bila tidak modul selesai.
   if (currentScenario.type === 'linear') {
     if (currentScenario.next && store.scenarioMap.has(currentScenario.next)) {
       store.activeScenarioId = currentScenario.next;
@@ -547,33 +500,32 @@ export function handleVideoEnded() {
     return;
   }
 
-  // Cabang end: penanda akhir modul -> langsung tutup dan kembali ke pilih mode.
+  // End: penanda akhir modul.
   if (currentScenario.type === 'end') {
     handleModuleEnd();
   }
 }
 
-/** Tampilkan panel kuis untuk skenario aktif (jika ada pertanyaan dan opsi). */
-// showQuiz: UNTUK APA? Tampilkan kuis: popup HTML bila mobile-flat, panel 3D visible bila 360/VR.
-// KENAPA? Tutup overlay dulu anti tumpuk; skenario end tanpa soal langsung dianggap modul selesai.
+// showQuiz(): tampilkan kuis (popup HTML bila mobile-flat, panel 3D bila 360/VR).
+// Overlay ditutup dulu agar tidak menumpuk; end tanpa soal = modul selesai.
 export function showQuiz() {
-  // Quiz menutup overlay terjadwal agar tidak saling menutupi.
+  // Tutup overlay terjadwal agar tidak menutupi kuis.
   hideTimedOverlays();
   const currentScenario = getActiveScenario();
 
   if (!currentScenario?.question || !Array.isArray(currentScenario.options)) {
-    // Skenario 'end' tanpa pertanyaan = modul selesai -> kembali ke pilih mode.
+    // end tanpa pertanyaan = modul selesai.
     if (currentScenario?.type === 'end') {
       handleModuleEnd();
     }
     return;
   }
 
-  // Mobile + video flat (Sony A6400): popup HTML di depan video.
+  // Mobile flat: popup HTML di atas video.
   if (store.activeMode === 'mobile' && isFlatScenario(currentScenario)) {
     pauseActiveVideos();
     renderMobileQuizPopup(currentScenario, (event, button) => {
-      // testOnTap(event); // (dinonaktifkan sementara)
+      // testOnTap(event);
       handleOption(button);
     });
     return;
@@ -584,12 +536,8 @@ export function showQuiz() {
   });
 }
 
-/**
- * Tangani aksi ketika opsi kuis dipilih: tampilkan umpan balik, lalu navigasi ke skenario berikutnya
- * atau ke skenario konsekuensi sesuai properti `next` / `consequence` pada opsi.
- */
-// handleOption: UNTUK APA? Nilai jawaban (benar/salah), beri warna+feedback, lalu navigasi setelah 1200ms.
-// KENAPA? consequence selalu menang (tampilkan akibat salah); next hanya bila benar — jeda memberi waktu baca feedback.
+// handleOption(): nilai jawaban, beri warna + feedback, navigasi setelah 1200ms (jeda baca).
+// consequence selalu menang; next hanya bila benar.
 export function handleOption(optionEntity) {
   const optionIndex = optionEntity.dataset.optionIndex;
   const correct = optionEntity.dataset.correct === 'true';
@@ -606,7 +554,7 @@ export function handleOption(optionEntity) {
     correct ? '#bbf7d0' : '#fecaca'
   );
 
-  // testOnFeedbackPrepared(); // (dinonaktifkan sementara)
+  // testOnFeedbackPrepared();
 
   window.setTimeout(() => {
     if (consequenceScenario && store.scenarioMap.has(consequenceScenario)) {
@@ -623,12 +571,8 @@ export function handleOption(optionEntity) {
   }, 1200);
 }
 
-/**
- * Render skenario aktif ke layar sesuai mode (VR atau mobile).
- * Menangani pembuatan scene, pemasangan video, binding event, dan transisi.
- */
-// renderActiveScenario: UNTUK APA? Orkestrasi render segmen: fade, clear, bangun VR/mobile, overlay, lalu play/quiz.
-// KENAPA? Batalkan timer + detach overlay dulu agar segmen baru bersih; shouldShowQuizImmediately untuk kembalian consequence.
+// renderActiveScenario(): orkestrasi render segmen (fade, scene VR/mobile, overlay, play/quiz).
+// Timer + overlay lama dibersihkan dulu; shouldShowQuizImmediately untuk kembalian consequence.
 export async function renderActiveScenario() {
   const scenario = getActiveScenario();
 
@@ -636,15 +580,15 @@ export async function renderActiveScenario() {
     return;
   }
 
-  // testOnRenderStart(); // (dinonaktifkan sementara)
+  // testOnRenderStart();
 
-  // Batalkan timer auto-kembali yang tertunda (mis. user pindah segmen manual).
+  // Batalkan timer auto-kembali yang tertunda.
   if (endRedirectTimer) {
     window.clearTimeout(endRedirectTimer);
     endRedirectTimer = null;
   }
 
-  // Reset mesin overlay terjadwal untuk segmen baru.
+  // Reset overlay terjadwal untuk segmen baru.
   detachTimedOverlays();
 
   const overlay = getFadeOverlay(store.activeMode);
@@ -663,19 +607,17 @@ export async function renderActiveScenario() {
       return;
     }
 
-    // 1 video yang dipakai bersama oleh scene kiri dan kanan.
+    // Satu video dipakai bersama scene kiri dan kanan.
     const sharedVideo = ensureSharedVrVideo(scenario);
     sharedVideo.onended = handleVideoEnded;
 
-    // Gerbang START: tiap segmen VR di-pause di awal (waktu pasang HP ke
-    // kacamata). Kecuali kembali dari konsekuensi (shouldShowQuizImmediately):
-    // kuis langsung tampil, gate disembunyikan.
+    // VR: video di-pause tiap segmen (waktu pasang HP); bila kembali dari
+    // konsekuensi kuis langsung tampil dan gate disembunyikan.
     const showGate = !store.shouldShowQuizImmediately;
     try {
       sharedVideo.pause();
     } catch { /* abaikan */ }
 
-    // Tampilan kiri dan kanan.
     vrLeftMount.innerHTML = buildSceneHtml({
       mode: 'vr',
       eye: 'left',
@@ -694,7 +636,7 @@ export async function renderActiveScenario() {
     fitVrQuizLayout(vrRightMount);
     if (!showGate) hideVrStartGate();
     applyCalibrationTarget('vr');
-    // Layar split kiri-kanan butuh landscape: kunci otomatis (gagal diam-diam di browser).
+    // Split kiri-kanan butuh landscape (gagal diam-diam di browser).
     lockLandscape();
   }
 
@@ -706,10 +648,10 @@ export async function renderActiveScenario() {
     }
   }
 
-  // Pasang overlay terjadwal (teks/gambar detik tertentu) ke video aktif.
+  // Pasang overlay terjadwal ke video aktif.
   attachTimedOverlays(scenario);
 
-  // testOnRenderReady(); // (dinonaktifkan sementara)
+  // testOnRenderReady();
 
   if (store.shouldShowQuizImmediately) {
     setTimeout(() => {
@@ -718,10 +660,8 @@ export async function renderActiveScenario() {
       store.shouldShowQuizImmediately = false;
     }, 500);
   } else if (store.activeMode !== 'vr' && !store.awaitMobileGuide) {
-    // Mobile (flat/360) auto-play; VR menunggu tombol START di environment.
-    // KENAPA cek awaitMobileGuide? Gerbang panduan: video ditahan sampai user
-    // tekan "Mengerti, mulai" (closeMobileGuide yang memutar). Tanpa cek ini,
-    // video jalan duluan di belakang modal padahal user belum siap.
+    // Mobile auto-play; VR menunggu tombol START. awaitMobileGuide menahan
+    // video sampai panduan "Mengerti, mulai" ditutup.
     setTimeout(playActiveVideos, 400);
   }
 

@@ -1,14 +1,7 @@
-/**
- * scenario-orientation.js — lock orientasi, fullscreen, dan hint rotate.
- *
- * Semua helper di sini hanya mengurus tampilan/orientasi, tidak mengimpor
- * controller skenario.
- */
+// scenario-orientation.js: lock orientasi, fullscreen, dan hint rotate.
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 
-/** TRUE jika layar sedang portrait. */
-// isPortraitNow: UNTUK APA? Deteksi orientasi portrait via matchMedia (fallback perbandingan tinggi/lebar).
-// KENAPA? Dipakai updateRotateHintVisibility agar hint "putar HP" hanya muncul saat dibutuhkan.
+// isPortraitNow(): TRUE jika layar sedang portrait (matchMedia, fallback tinggi/lebar).
 function isPortraitNow() {
   if (window.matchMedia) {
     return window.matchMedia('(orientation: portrait)').matches;
@@ -16,9 +9,7 @@ function isPortraitNow() {
   return window.innerHeight >= window.innerWidth;
 }
 
-/** Tampilkan/sembunyikan hint "putar HP" (hanya saat flat aktif + portrait). */
-// updateRotateHintVisibility: UNTUK APA? Toggle hint rotate hanya bila wrap flat terlihat + portrait.
-// KENAPA? Hint yang selalu muncul mengganggu; syarat ganda menjaga UX fullscreen Sony A6400.
+// updateRotateHintVisibility(): hint "putar HP" hanya saat flat aktif + portrait.
 function updateRotateHintVisibility() {
   const wrap = document.getElementById('mobileFlatWrap');
   const hint = document.getElementById('mobileRotateHint');
@@ -27,23 +18,22 @@ function updateRotateHintVisibility() {
   hint.classList.toggle('hidden', !(flatActive && isPortraitNow()));
 }
 
-/** Coba kunci ke landscape via plugin native (APK) dulu, fallback Web API (browser).
- * Dipakai flat (Sony) + VR (split kiri-kanan butuh landscape). */
+// lockLandscape(): coba kunci landscape via plugin native, fallback Web API.
 export async function lockLandscape() {
   try {
     await ScreenOrientation.lock({ orientation: 'landscape' });
     return 'native';
-  } catch { /* bukan APK / ditolak — lanjut fallback */ }
+  } catch { /* bukan APK, lanjut fallback */ }
   try {
     if (screen.orientation?.lock) {
       await screen.orientation.lock('landscape');
       return 'web';
     }
-  } catch { /* butuh gesture / tidak didukung */ }
+  } catch { /* butuh gesture / tak didukung */ }
   return 'gagal';
 }
 
-/** Buka kunci orientasi (native + web), abaikan bila tidak didukung. */
+// unlockOrientation(): buka kunci orientasi native + web, abaikan bila tak didukung.
 export async function unlockOrientation() {
   try {
     await ScreenOrientation.unlock();
@@ -53,18 +43,14 @@ export async function unlockOrientation() {
   } catch { /* abaikan */ }
 }
 
-/** Coba kunci ke landscape (tanpa fullscreen; gagal diam-diam kalau belum ada gesture). */
-// tryFlatLandscape: UNTUK APA? Percobaan auto-lock landscape tiap masuk segmen flat.
-// KENAPA? Browser butuh gesture user; gagal diam-diam lalu hint putar-HP jadi fallback (tidak crash).
+// tryFlatLandscape(): auto-lock landscape saat masuk flat; gagal diam-diam tanpa gesture.
 export async function tryFlatLandscape() {
   updateRotateHintVisibility();
   await lockLandscape();
   updateRotateHintVisibility();
 }
 
-/** Keluar dari landscape: unlock + keluar fullscreen. */
-// exitFlatLandscape: UNTUK APA? Bersihkan lock orientasi + fullscreen + hint saat pindah ke 360/VR.
-// KENAPA? Tanpa cleanup, HP terkunci landscape dan hint nyangkut di scene yang tidak butuh.
+// exitFlatLandscape(): unlock orientasi, keluar fullscreen, sembunyikan hint.
 export function exitFlatLandscape() {
   unlockOrientation();
   try {

@@ -1,14 +1,7 @@
-/**
- * scenario-quiz-ui.js — UI kuis (popup HTML flat + status visual opsi).
- *
- * Tidak mengimpor controller. Aksi pilih jawaban dikirim lewat callback
- * `onSelect(event, button)` agar tidak terjadi circular import dengan
- * scenario.js.
- */
+// scenario-quiz-ui.js: UI kuis popup HTML flat + status visual opsi.
+// Aksi dikirim lewat callback agar tidak circular import dengan scenario.js.
 
-/** Render popup branching HTML di depan video flat. */
-// renderMobileQuizPopup: UNTUK APA? Bangun tombol opsi HTML di atas video flat + teruskan klik ke controller.
-// KENAPA? Mode flat tanpa A-Frame jadi kuis harus DOM; escape "<" mencegah injeksi dari scenarios.json.
+// renderMobileQuizPopup(): bangun popup kuis HTML flat; escape "<" cegah injeksi.
 export function renderMobileQuizPopup(scenario, onSelect) {
   const popup = document.getElementById('mobileQuizPopup');
   const questionEl = document.getElementById('mobileQuizQuestion');
@@ -49,9 +42,7 @@ export function renderMobileQuizPopup(scenario, onSelect) {
   popup.classList.remove('hidden');
 }
 
-/** Reset status visual semua opsi kuis (hapus seleksi dan set warna default). */
-// resetOptionStates: UNTUK APA? Kembalikan semua opsi 3D + HTML ke netral sebelum penilaian baru.
-// KENAPA? Dipanggil awal handleOption agar warna/selected jawaban lama tidak terbawa ke soal berikutnya.
+// resetOptionStates(): netralkan status visual semua opsi 3D + HTML.
 export function resetOptionStates() {
   document.querySelectorAll('.quiz-option').forEach((option) => {
     option.dataset.selected = '';
@@ -69,9 +60,7 @@ export function resetOptionStates() {
   });
 }
 
-/** Tampilkan pesan umpan balik di panel kuis (teks + warna). */
-// setFeedback: UNTUK APA? Tulis pesan benar/salah ke teks 3D + popup HTML mobile.
-// KENAPA? Guard popup hidden agar pesan lama tidak menimpa popup yang sedang tertutup; warna kuning default netral.
+// setFeedback(): tulis pesan umpan balik ke teks 3D + popup HTML mobile.
 export function setFeedback(message, color = '#fef08a') {
   document.querySelectorAll('.feedback-text').forEach((text) => {
     text.setAttribute('value', message);
@@ -85,9 +74,7 @@ export function setFeedback(message, color = '#fef08a') {
   }
 }
 
-/** Beri warna pada opsi yang dipilih: hijau jika benar, merah jika salah. */
-// colorSelectedOptions: UNTUK APA? Tandai opsi terpilih (hijau benar / merah salah) di 3D + HTML lalu kunci HTML.
-// KENAPA? Kunci disabled mencegah tap dobel selama jeda 1200ms sebelum navigasi segmen berikutnya.
+// colorSelectedOptions(): warnai opsi terpilih (hijau/merah) lalu kunci opsi HTML.
 export function colorSelectedOptions(index, correct) {
   document.querySelectorAll(`.quiz-option[data-option-index="${index}"]`).forEach((option) => {
     option.dataset.selected = 'true';
@@ -102,7 +89,7 @@ export function colorSelectedOptions(index, correct) {
   document.querySelectorAll(`.mobile-quiz-option[data-option-index="${index}"]`).forEach((option) => {
     option.classList.add(correct ? 'correct' : 'wrong');
   });
-  // Kunci semua opsi HTML agar tidak bisa tap dobel selama transisi.
+  // Kunci opsi HTML agar tidak bisa tap dobel saat transisi.
   document.querySelectorAll('.mobile-quiz-option').forEach((option) => {
     option.disabled = true;
   });

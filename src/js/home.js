@@ -1,12 +1,4 @@
-/**
- * home.js — logic for home.html (#homeScreen).
- * Owns: module list fetch + render + open module.
- * Cross-page actions delegate to navigation.js / scenario.js.
- *
- * UNTUK APA FILE INI?
- * Halaman pertama: ambil daftar modul dari modules.json, tampilkan sebagai kartu,
- * dan saat diklik -> muat skenario modul itu, cek unduhan, lalu arahkan ke layar berikutnya.
- */
+// home.js — tampilkan daftar modul dari modules.json dan buka modul yang diklik.
 import { MODULES_URL, store } from './store.js'; // URL JSON + memori global.
 import { safeText, showToast } from './utils.js'; // escape HTML agar judul aman.
 import { loadScenarios } from './scenario.js'; // muat scenarios.json modul terpilih.
@@ -14,13 +6,8 @@ import { applyImageUris, applyLocalVideos, collectImageRemotes, getDownloadProgr
 import { backToModules, openCalibrationScreen, showScreen } from './navigation.js'; // pindah layar.
 import { confirmRemoteBeforeVr } from './remote-gate.js'; // gerbang remote BT sebelum kalibrasi VR.
 
-/**
- * loadModules():
- * Untuk apa? Ambil manifest modul dari server dan render daftar modul.
- * - fetch(MODULES_URL) KENAPA? Daftar modul bisa diubah tanpa rebuild APK (cukup edit JSON).
- * - !response.ok -> throw KENAPA? Agar main.js bisa catch + alert "cek modules.json".
- * - store.modules = await response.json() KENAPA simpan di store? Agar openModule bisa find by id tanpa fetch ulang.
- */
+// loadModules(): ambil manifest modul dari server lalu render daftar.
+// Dari server agar daftar bisa diubah tanpa rebuild APK; error dilempar agar main.js bisa alert.
 export async function loadModules() {
   const response = await fetch(MODULES_URL);
 
@@ -32,19 +19,11 @@ export async function loadModules() {
   renderModuleList(); // langsung tampilkan setelah data datang.
 }
 
-/**
- * renderModuleList():
- * Untuk apa? Render daftar modul ke UI. Setiap modul menjadi sebuah tombol.
- * Menggunakan `safeText` untuk mencegah penyisipan HTML yang tidak aman (XSS dari JSON).
- * - if (!moduleList) return KENAPA? Jaga-jaga HTML belum ada (mis. test) -> jangan crash.
- * - if kosong -> pesan "Belum ada modul". KENAPA? Feedback jelas, bukan layar putih kosong.
- * - .map(...).join('') KENAPA? Bangun semua kartu sekaligus (1x innerHTML) lebih cepat daripada append per kartu.
- * - data-module-id KENAPA? Untuk tahu kartu mana diklik tanpa closure per modul.
- * - isCalibration ? '⌁' : '360°' KENAPA? Ikon beda agar modul setting tidak dikira materi.
- */
+// renderModuleList(): render kartu modul (judul di-escape safeText) + filter kata kunci.
+// Dibangun sekali via map().join('') agar hanya 1x innerHTML, lalu listener dipasang per kartu.
 export function renderModuleList(query = '') {
   const moduleList = document.getElementById('moduleList');
-  if (!moduleList) return;
+  if (!moduleList) return; // HTML belum ada (mis. test) -> jangan crash.
 
   if (!store.modules.length) {
     moduleList.innerHTML = '<p>Belum ada modul tersedia.</p>';
@@ -89,7 +68,7 @@ export function renderModuleList(query = '') {
     })
     .join('');
 
-  // Pasang klik tiap kartu -> openModule(id). KENAPA query setelah innerHTML? Karena tombol baru dibuat, listener lama hilang.
+  // Listener dipasang setelah innerHTML karena tombol lama ikut terhapus.
   moduleList.querySelectorAll('.module-card').forEach((button) => {
     button.addEventListener('click', () => {
       openModule(button.dataset.moduleId);
@@ -97,21 +76,8 @@ export function renderModuleList(query = '') {
   });
 }
 
-/**
- * openModule(moduleId):
- * Untuk apa? Buka modul by id: set active module, perbarui UI mode.html, muat skenarionya, lalu tampilkan pilihan mode.
- * ALUR:
- * 1. find modul -> bila tidak ada alert. KENAPA? Cegah id palsu dari console.
- * 2. Jika type calibration -> langsung openCalibrationScreen (tidak butuh scenarios.json/download).
- *    KENAPA? Kalibrasi adalah setting, bukan materi video.
- * 3. Update judul/deskripsi di mode.html agar user tahu modul apa yang dibuka.
- * 4. loadScenarios(scenarioUrl) -> isi store.scenarios.
- * 5. purgeOrphanDownloads (hapus file yatim) + applyLocalVideos + applyImageUris
- *    KENAPA? Petakan file yang sudah diunduh sebelumnya ke scenario.video/localImage agar bisa offline.
- * 6. Cek missing (video + gambar). Bila ada kurang -> showScreen('download') + runDownloadFlow (blokir ala PUBG).
- *    KENAPA blokir? Agar user tidak masuk materi dengan video rusak/hilang.
- * 7. Bila lengkap -> showScreen('mode') (timeline segmen).
- */
+// openModule(): buka modul by id -> set activeModule, muat skenario, cek unduhan, pindah layar.
+// Modul kalibrasi langsung ke layar kalibrasi (tanpa scenarios.json/unduhan) karena hanya setting.
 export async function openModule(moduleId) {
   const selectedModule = store.modules.find((module) => module.id === moduleId);
 
@@ -129,7 +95,7 @@ export async function openModule(moduleId) {
     return;
   }
 
-  // Guard 4a: modul materi lain ditolak saat ada unduhan berjalan (kalibrasi bebas).
+  // Tolak modul lain saat unduhan berjalan (kalibrasi bebas).
   if (isDownloading()) {
     const prog = getDownloadProgress();
     if (prog && prog.moduleId !== selectedModule.id) {
@@ -148,9 +114,7 @@ export async function openModule(moduleId) {
 
   await loadScenarios(store.activeModule.scenarioUrl);
 
-  // Bersihkan file yatim (fileId tak lagi dirujuk, mis. file pilot lama),
-  // petakan video + gambar lokal yang sudah terunduh, lalu tahan di layar
-  // download bila masih ada paket yang kurang.
+  // Bersihkan file yatim, petakan video/gambar yang sudah terunduh, lalu cek kekurangan paket.
   await purgeOrphanDownloads(store.scenarios);
   await applyLocalVideos(store.scenarios);
   await applyImageUris(store.scenarios);
@@ -158,12 +122,12 @@ export async function openModule(moduleId) {
   const missingImages = (await collectImageRemotes(store.scenarios))
     .filter((g) => !g.overlays.every((o) => overlayImagesResolved(o)));
 
-  if (missing.length || missingImages.length) {
+  if (missing.length || missingImages.length) { // tahan di layar download agar materi tidak dibuka dengan file rusak.
     showScreen('download');
     runDownloadFlow(store.scenarios, {
       moduleId: selectedModule.id,
       onDone: () => showScreen('mode'), // selesai -> ke timeline.
-      onBack: () => backToModules(), // kembali -> detach, job lanjut background.
+      onBack: () => backToModules(), // kembali -> job lanjut di background.
     });
     return;
   }
@@ -171,12 +135,7 @@ export async function openModule(moduleId) {
   showScreen('mode');
 }
 
-/**
- * initHome():
- * Untuk apa? Wire listener milik home.html (sekali saat start).
- * Topbar profile/settings sudah dihapus — kalibrasi hanya via kartu modul.
- * Listener download-progress di sini untuk refresh badge progres di daftar modul.
- */
+// initHome(): pasang listener pencarian + refresh badge progres unduhan (dibatasi 2s sekali).
 export function initHome() {
   const searchInput = document.getElementById('moduleSearch');
   searchInput?.addEventListener('input', () => {

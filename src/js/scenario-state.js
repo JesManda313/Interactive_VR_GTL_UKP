@@ -1,24 +1,13 @@
-/**
- * scenario-state.js — selector state skenario.
- *
- * Dipisah dari scenario.js agar modul render/overlay bisa membaca state
- * tanpa mengimpor controller (mencegah circular import).
- */
+// scenario-state.js: selector state skenario.
+// Dipisah dari scenario.js agar render/overlay bisa baca state tanpa circular import.
 import { store } from './store.js';
 
-/** Kembalikan objek skenario aktif berdasarkan `activeScenarioId`. */
-// getActiveScenario: UNTUK APA? Getter tunggal untuk segmen yang sedang tampil.
+// getActiveScenario(): skenario aktif sesuai activeScenarioId.
 export function getActiveScenario() {
   return store.scenarioMap.get(store.activeScenarioId);
 }
 
-/**
- * TRUE jika skenario memakai video flat (projection: flat):
- * video tampil langsung fullscreen HP, tanpa videosphere/bioskop.
- * Selain itu (360 / kosong) dianggap 360.
- */
-// isFlatScenario: UNTUK APA? Penentu cabang render flat (video <video>) vs 360 (A-Frame videosphere).
-// KENAPA? Satu fungsi dipakai render + overlay + quiz agar keputusan konsisten (termasuk alias 2d/rectilinear).
+// isFlatScenario(): TRUE untuk flat/2d/rectilinear; cabang render <video> vs 360.
 export function isFlatScenario(scenario) {
   if (!scenario) return false;
   const projection = String(scenario.projection ?? scenario.videoType ?? '').toLowerCase();
